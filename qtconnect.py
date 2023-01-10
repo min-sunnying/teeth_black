@@ -3,6 +3,7 @@ import os
 import pydicom
 import numpy as np
 import PyQt5.QtCore as QtCore
+from PIL import Image, ImageDraw 
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -49,7 +50,7 @@ class WindowClass(QMainWindow, form_class):
         self.submit.clicked.connect(self.submitted)
         self.white_pen.clicked.connect(self.whitecrop)
         self.black_pen.clicked.connect(self.blackcrop)
-        self.add_crop.clicked.connect(self.cropbutton)
+        self.crop.clicked.connect(self.cropbutton)
 
         #variables
         self.folder=""
@@ -153,9 +154,9 @@ class WindowClass(QMainWindow, form_class):
         image = dicom_data.pixel_array.astype(float)
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
+        print(type(image))
         height, width = image.shape
         bytes_per_line = width
-        print(image.shape)
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
         self.pixmap=QPixmap.fromImage(qimage)
         self.image.setPixmap(self.pixmap)
@@ -163,7 +164,6 @@ class WindowClass(QMainWindow, form_class):
     def mousePressEvent(self, e):
         if self.white==True or self.black==True:
             self.tempcrop.append((self.posx, self.posy))
-            print(self.tempcrop)
         else:
             pass
 
@@ -188,12 +188,56 @@ class WindowClass(QMainWindow, form_class):
             self.crop_rw.append(self.tempcrop)
             self.tempcrop=[]
             self.white=False
-        elif self.black==True:
+            self.croped_image_show(True, False, self.current_index)
+        if self.black==True:
             self.crop_rb.append(self.tempcrop)
             self.tempcrop=[]
             self.black=False
-        print(self.crop)
+            self.croped_image_show(False, True, self.current_index)
+        print(self.crop_rw)
 
+    def croped_image_show(self, white, black, index):
+        if white==True:
+            file_path = os.path.join(self.folder, self.crop_image[index])
+            dicom_data = pydicom.dcmread(file_path)
+            image = dicom_data.pixel_array.astype(float)
+            image = (np.maximum(image,0)/image.max())*255
+            image = np.uint8(image)
+
+            maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
+            ImageDraw.Draw(maskIm).polygon(self.crop_rw[0], outline=1, fill=1)
+            mask=np.array(maskIm)
+            newImArray=np.empty(image.shape, dtype='uint8')
+            newImArray[:, :]=image[:, :]
+            newImArray[:,:]=mask*newImArray[:, :]
+
+            height, width = newImArray.shape
+            bytes_per_line = width
+            qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
+            pixmap=QPixmap.fromImage(qimage)
+            self.Showcroped.setPixmap(pixmap)
+            self.crop_rw.clear()
+            
+        if black==True:
+            file_path = os.path.join(self.folder, self.crop_image[index])
+            dicom_data = pydicom.dcmread(file_path)
+            image = dicom_data.pixel_array.astype(float)
+            image = (np.maximum(image,0)/image.max())*255
+            image = np.uint8(image)
+
+            maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
+            ImageDraw.Draw(maskIm).polygon(self.crop_rb[0], outline=1, fill=1)
+            mask=np.array(maskIm)
+            newImArray=np.empty(image.shape, dtype='uint8')
+            newImArray[:, :]=image[:, :]
+            newImArray[:,:]=mask*newImArray[:, :]
+
+            height, width = newImArray.shape
+            bytes_per_line = width
+            qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
+            pixmap=QPixmap.fromImage(qimage)
+            self.Showcroped_2.setPixmap(pixmap)
+            self.crop_rb.clear()
 
 
 if __name__ == "__main__":

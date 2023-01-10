@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1328</width>
-    <height>837</height>
+    <width>1511</width>
+    <height>1145</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QToolButton" name="select_folder">
    <property name="geometry">
     <rect>
-     <x>1190</x>
-     <y>20</y>
+     <x>460</x>
+     <y>1080</y>
      <width>121</width>
      <height>31</height>
     </rect>
@@ -29,8 +29,8 @@
   <widget class="QTextBrowser" name="foldername">
    <property name="geometry">
     <rect>
-     <x>750</x>
-     <y>20</y>
+     <x>20</x>
+     <y>1080</y>
      <width>431</width>
      <height>31</height>
     </rect>
@@ -39,8 +39,8 @@
   <widget class="QPushButton" name="crop">
    <property name="geometry">
     <rect>
-     <x>1220</x>
-     <y>660</y>
+     <x>1320</x>
+     <y>510</y>
      <width>88</width>
      <height>71</height>
     </rect>
@@ -52,9 +52,9 @@
   <widget class="QTextBrowser" name="result">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>750</y>
-     <width>1161</width>
+     <x>10</x>
+     <y>830</y>
+     <width>551</width>
      <height>71</height>
     </rect>
    </property>
@@ -62,8 +62,8 @@
   <widget class="QPushButton" name="white_s">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>660</y>
+     <x>40</x>
+     <y>710</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -75,8 +75,8 @@
   <widget class="QPushButton" name="white_e">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>700</y>
+     <x>40</x>
+     <y>750</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -88,8 +88,8 @@
   <widget class="QPushButton" name="black_e">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>700</y>
+     <x>190</x>
+     <y>750</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -101,8 +101,8 @@
   <widget class="QPushButton" name="black_s">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>660</y>
+     <x>190</x>
+     <y>710</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -114,8 +114,8 @@
   <widget class="QPushButton" name="add_crop">
    <property name="geometry">
     <rect>
-     <x>460</x>
-     <y>660</y>
+     <x>340</x>
+     <y>710</y>
      <width>131</width>
      <height>71</height>
     </rect>
@@ -127,8 +127,8 @@
   <widget class="QPushButton" name="submit">
    <property name="geometry">
     <rect>
-     <x>1200</x>
-     <y>750</y>
+     <x>220</x>
+     <y>960</y>
      <width>111</width>
      <height>71</height>
     </rect>
@@ -140,8 +140,8 @@
   <widget class="QPushButton" name="black_pen">
    <property name="geometry">
     <rect>
-     <x>860</x>
-     <y>660</y>
+     <x>1320</x>
+     <y>790</y>
      <width>88</width>
      <height>71</height>
     </rect>
@@ -153,8 +153,8 @@
   <widget class="QPushButton" name="white_pen">
    <property name="geometry">
     <rect>
-     <x>750</x>
-     <y>660</y>
+     <x>1320</x>
+     <y>240</y>
      <width>91</width>
      <height>71</height>
     </rect>
@@ -166,9 +166,9 @@
   <widget class="QSlider" name="slider">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>40</x>
      <y>620</y>
-     <width>721</width>
+     <width>481</width>
      <height>20</height>
     </rect>
    </property>
@@ -179,7 +179,7 @@
   <widget class="QLabel" name="image">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>50</x>
      <y>60</y>
      <width>512</width>
      <height>512</height>
@@ -198,10 +198,10 @@
   <widget class="QLabel" name="Showcroped">
    <property name="geometry">
     <rect>
-     <x>750</x>
-     <y>70</y>
-     <width>561</width>
-     <height>261</height>
+     <x>710</x>
+     <y>20</y>
+     <width>512</width>
+     <height>512</height>
     </rect>
    </property>
    <property name="text">
@@ -217,9 +217,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>40</x>
      <y>640</y>
-     <width>721</width>
+     <width>481</width>
      <height>20</height>
     </rect>
    </property>
@@ -230,10 +230,10 @@
   <widget class="QLabel" name="Showcroped_2">
    <property name="geometry">
     <rect>
-     <x>750</x>
-     <y>350</y>
-     <width>561</width>
-     <height>261</height>
+     <x>710</x>
+     <y>580</y>
+     <width>512</width>
+     <height>512</height>
     </rect>
    </property>
    <property name="text">
