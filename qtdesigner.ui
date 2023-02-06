@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1511</width>
-    <height>1145</height>
+    <width>1214</width>
+    <height>909</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QToolButton" name="select_folder">
    <property name="geometry">
     <rect>
-     <x>460</x>
-     <y>1080</y>
+     <x>1040</x>
+     <y>20</y>
      <width>121</width>
      <height>31</height>
     </rect>
@@ -29,19 +29,22 @@
   <widget class="QTextBrowser" name="foldername">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>1080</y>
+     <x>600</x>
+     <y>20</y>
      <width>431</width>
      <height>31</height>
     </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="crop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
-     <x>1320</x>
-     <y>510</y>
-     <width>88</width>
+     <x>950</x>
+     <y>660</y>
+     <width>91</width>
      <height>71</height>
     </rect>
    </property>
@@ -52,9 +55,9 @@
   <widget class="QTextBrowser" name="result">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>830</y>
-     <width>551</width>
+     <x>20</x>
+     <y>740</y>
+     <width>391</width>
      <height>71</height>
     </rect>
    </property>
@@ -62,8 +65,8 @@
   <widget class="QPushButton" name="white_s">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>710</y>
+     <x>70</x>
+     <y>660</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -75,8 +78,8 @@
   <widget class="QPushButton" name="white_e">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>750</y>
+     <x>70</x>
+     <y>700</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -88,8 +91,8 @@
   <widget class="QPushButton" name="black_e">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>750</y>
+     <x>220</x>
+     <y>700</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -101,8 +104,8 @@
   <widget class="QPushButton" name="black_s">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>710</y>
+     <x>220</x>
+     <y>660</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -114,8 +117,8 @@
   <widget class="QPushButton" name="add_crop">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>710</y>
+     <x>370</x>
+     <y>660</y>
      <width>131</width>
      <height>71</height>
     </rect>
@@ -127,8 +130,8 @@
   <widget class="QPushButton" name="submit">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>960</y>
+     <x>430</x>
+     <y>740</y>
      <width>111</width>
      <height>71</height>
     </rect>
@@ -137,37 +140,27 @@
     <string>SUBMIT</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="black_pen">
-   <property name="geometry">
-    <rect>
-     <x>1320</x>
-     <y>790</y>
-     <width>88</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Black</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="white_pen">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
-     <x>1320</x>
-     <y>240</y>
+     <x>780</x>
+     <y>660</y>
      <width>91</width>
      <height>71</height>
     </rect>
    </property>
    <property name="text">
-    <string>White</string>
+    <string>Pen</string>
    </property>
   </widget>
   <widget class="QSlider" name="slider">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>620</y>
+     <x>50</x>
+     <y>610</y>
      <width>481</width>
      <height>20</height>
     </rect>
@@ -176,30 +169,11 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="image">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>60</y>
-     <width>512</width>
-     <height>512</height>
-    </rect>
-   </property>
-   <property name="mouseTracking">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>image</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
   <widget class="QLabel" name="Showcroped">
    <property name="geometry">
     <rect>
-     <x>710</x>
-     <y>20</y>
+     <x>630</x>
+     <y>80</y>
      <width>512</width>
      <height>512</height>
     </rect>
@@ -213,12 +187,12 @@
   </widget>
   <widget class="QSlider" name="slider2">
    <property name="enabled">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>640</y>
+     <x>50</x>
+     <y>630</y>
      <width>481</width>
      <height>20</height>
     </rect>
@@ -227,20 +201,120 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="Showcroped_2">
+  <widget class="QPushButton" name="ratio">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
-     <x>710</x>
-     <y>580</y>
-     <width>512</width>
-     <height>512</height>
+     <x>1080</x>
+     <y>740</y>
+     <width>111</width>
+     <height>71</height>
     </rect>
    </property>
    <property name="text">
-    <string>Croped image</string>
+    <string>Ratio</string>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="croped_result">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>740</y>
+     <width>431</width>
+     <height>71</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QScrollArea" name="scrollArea">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>70</y>
+     <width>521</width>
+     <height>521</height>
+    </rect>
+   </property>
+   <property name="widgetResizable">
+    <bool>false</bool>
    </property>
    <property name="alignment">
-    <set>Qt::AlignCenter</set>
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+   </property>
+   <widget class="QWidget" name="scrollAreaWidgetContents">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>519</width>
+      <height>519</height>
+     </rect>
+    </property>
+    <widget class="QLabel" name="image">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>512</width>
+       <height>512</height>
+      </rect>
+     </property>
+     <property name="mouseTracking">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>image</string>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QTextBrowser" name="textBrowser">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>830</y>
+     <width>1171</width>
+     <height>61</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="zoomin">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>20</y>
+     <width>88</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Zoom In</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="zoomout">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>20</y>
+     <width>88</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Zoom Out</string>
    </property>
   </widget>
  </widget>

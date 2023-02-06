@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QFileDialog, QDialog, QLabel
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
 
 form_class = uic.loadUiType("./qtdesigner.ui")[0]
+# np.set_printoptions(threshold=sys.maxsize)
 
 class MouseTracker(QtCore.QObject):
     positionChanged = QtCore.pyqtSignal(QtCore.QPoint)
@@ -49,8 +50,10 @@ class WindowClass(QMainWindow, form_class):
         self.add_crop.clicked.connect(self.cropimage)
         self.submit.clicked.connect(self.submitted)
         self.white_pen.clicked.connect(self.whitecrop)
-        self.black_pen.clicked.connect(self.blackcrop)
         self.crop.clicked.connect(self.cropbutton)
+        self.zoomin.clicked.connect(self.zoom_in)
+        self.zoomout.clicked.connect(self.zoom_out)
+        self.image.setScaledContents(True)
 
         #variables
         self.folder=""
@@ -62,12 +65,11 @@ class WindowClass(QMainWindow, form_class):
         self.black_end=[]
         self.crop_image=[]
         self.white=False
-        self.black=False
         self.tempcrop=[]
         self.crop_rw=[]
-        self.crop_rb=[]
         self.posx=0
         self.posy=0
+        self.scale=1
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -135,6 +137,9 @@ class WindowClass(QMainWindow, form_class):
             self.slider2.setRange(0, len(self.crop_image)-1)
             self.slider2.setEnabled(True)
             self.slider.setDisabled(True)
+            self.white_pen.setEnabled(True)
+            self.crop.setEnabled(True)
+            self.croped_result.setEnabled(True)
             self.selected_image()
         else:
             self.white_start.clear()
@@ -154,7 +159,6 @@ class WindowClass(QMainWindow, form_class):
         image = dicom_data.pixel_array.astype(float)
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
-        print(type(image))
         height, width = image.shape
         bytes_per_line = width
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
@@ -162,7 +166,7 @@ class WindowClass(QMainWindow, form_class):
         self.image.setPixmap(self.pixmap)
 
     def mousePressEvent(self, e):
-        if self.white==True or self.black==True:
+        if self.white==True:
             self.tempcrop.append((self.posx, self.posy))
         else:
             pass
@@ -172,31 +176,24 @@ class WindowClass(QMainWindow, form_class):
         delta = QtCore.QPoint(30, -15)
         self.label_position.show()
         self.label_position.move(pos + delta)
-        self.label_position.setText("(%d, %d)" % (pos.x(), pos.y()))
+        self.label_position.setText("(%d, %d)" % (pos.x()/self.scale, pos.y()/self.scale))
         self.label_position.adjustSize()
-        self.posx=pos.x()
-        self.posy=pos.y()  
+        self.posx=pos.x()/self.scale
+        self.posy=pos.y()/self.scale  
 
     def whitecrop(self):
         self.white=True
     
-    def blackcrop(self):
-        self.black=True
-    
     def cropbutton(self):
         if self.white==True:
+            print(self.tempcrop)
             self.crop_rw.append(self.tempcrop)
+            self.croped_result.append('|'.join(str(e) for e in self.tempcrop))
             self.tempcrop=[]
             self.white=False
-            self.croped_image_show(True, False, self.current_index)
-        if self.black==True:
-            self.crop_rb.append(self.tempcrop)
-            self.tempcrop=[]
-            self.black=False
-            self.croped_image_show(False, True, self.current_index)
-        print(self.crop_rw)
+            self.croped_image_show(True, self.current_index)
 
-    def croped_image_show(self, white, black, index):
+    def croped_image_show(self, white, index):
         if white==True:
             file_path = os.path.join(self.folder, self.crop_image[index])
             dicom_data = pydicom.dcmread(file_path)
@@ -217,27 +214,19 @@ class WindowClass(QMainWindow, form_class):
             pixmap=QPixmap.fromImage(qimage)
             self.Showcroped.setPixmap(pixmap)
             self.crop_rw.clear()
-            
-        if black==True:
-            file_path = os.path.join(self.folder, self.crop_image[index])
-            dicom_data = pydicom.dcmread(file_path)
-            image = dicom_data.pixel_array.astype(float)
-            image = (np.maximum(image,0)/image.max())*255
-            image = np.uint8(image)
+    
+    def zoom_in(self, e):
+        self.scale*=2
+        self.resizeimage()
+    
+    def zoom_out(self, e):
+        self.scale/=2
+        self.resizeimage()
 
-            maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
-            ImageDraw.Draw(maskIm).polygon(self.crop_rb[0], outline=1, fill=1)
-            mask=np.array(maskIm)
-            newImArray=np.empty(image.shape, dtype='uint8')
-            newImArray[:, :]=image[:, :]
-            newImArray[:,:]=mask*newImArray[:, :]
-
-            height, width = newImArray.shape
-            bytes_per_line = width
-            qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
-            pixmap=QPixmap.fromImage(qimage)
-            self.Showcroped_2.setPixmap(pixmap)
-            self.crop_rb.clear()
+    def resizeimage(self):
+        size = self.pixmap.size()
+        self.scrollAreaWidgetContents.resize(self.scale*size)
+        self.image.resize(self.scale*size)
 
 
 if __name__ == "__main__":

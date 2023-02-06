@@ -5,9 +5,9 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 class GripItem(QtWidgets.QGraphicsPathItem):
     circle = QtGui.QPainterPath()
-    circle.addEllipse(QtCore.QRectF(-10, -10, 20, 20))
+    circle.addEllipse(QtCore.QRectF(-5, -5, 10, 10))
     square = QtGui.QPainterPath()
-    square.addRect(QtCore.QRectF(-15, -15, 30, 30))
+    square.addRect(QtCore.QRectF(-5, -5, 10, 10))
 
     def __init__(self, annotation_item, index):
         super(GripItem, self).__init__()
