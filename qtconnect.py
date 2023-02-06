@@ -54,6 +54,8 @@ class WindowClass(QMainWindow, form_class):
         self.zoomin.clicked.connect(self.zoom_in)
         self.zoomout.clicked.connect(self.zoom_out)
         self.image.setScaledContents(True)
+        self.transparent.setScaledContents(True)
+        self.transparent.setStyleSheet("background-color: rgba(0, 255, 255, 90);")
 
         #variables
         self.folder=""
@@ -75,10 +77,10 @@ class WindowClass(QMainWindow, form_class):
         self.pixmap=QPixmap()
 
         # mouse tracking
-        tracker = MouseTracker(self.image)
+        tracker = MouseTracker(self.transparent)
         tracker.positionChanged.connect(self.on_positionChanged)
         self.label_position = QLabel(
-            self.image, alignment=QtCore.Qt.AlignCenter
+            self.transparent, alignment=QtCore.Qt.AlignCenter
         )
         self.label_position.setStyleSheet('background-color: white; border: 1px solid black')
         
@@ -226,6 +228,7 @@ class WindowClass(QMainWindow, form_class):
     def resizeimage(self):
         size = self.pixmap.size()
         self.scrollAreaWidgetContents.resize(self.scale*size)
+        self.transparent.resize(self.scale*size)
         self.image.resize(self.scale*size)
 
 
