@@ -1,35 +1,91 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QLabel, QWidget)
-from PyQt5.QtGui import QPainter, QColor, QPen
-from PyQt5.QtCore import Qt
+import os
+import pydicom
+import numpy as np
+import PyQt5.QtCore as QtCore
+from PIL import Image, ImageDraw 
+from PyQt5.QtCore import Qt, QRect, QPoint
+from PyQt5 import uic
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtWidgets import QFileDialog, QDialog, QLabel
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QFont
 
-class MouseTracker(QWidget):
-    distance_from_center = 0
+class Example(QWidget):
     def __init__(self):
         super().__init__()
+        self.mModified = True
         self.initUI()
-        self.setMouseTracking(True)
+        self.currentRegion = QRect(50, 50, 50, 80)
+        self.x0 = 5
+        self.x1 = 25
+        self.y0 = 5
+        self.y1 = 25
+        self.mPixmap = QPixmap()
+        self.func = (None, None)
 
     def initUI(self):
-        self.setGeometry(200, 200, 1000, 500)
-        self.setWindowTitle('Mouse Tracker')
-        self.label = QLabel(self)
-        self.label.resize(500, 40)
+        self.setGeometry(300, 300, 280, 270)
+        self.setWindowTitle('Painter training')
         self.show()
-        self.pos = None
-
-    def mouseMoveEvent(self, event):
-        distance_from_center = round(((event.y() - 250)**2 + (event.x() - 500)**2)**0.5)
-        self.label.setText('Coordinates: ( %d : %d )' % (event.x(), event.y()) + "Distance from center: " + str(distance_from_center))       
-        self.pos = event.pos()
-        self.update()
 
     def paintEvent(self, event):
-        if self.pos:
-            q = QPainter(self)
-            q.drawLine(self.pos.x(), self.pos.y(), 250, 500)
+        if self.mModified:
+            pixmap = QPixmap(self.size())
+            pixmap.fill(Qt.white)
+            painter = QPainter(pixmap)
+            painter.drawPixmap(0, 0, self.mPixmap)
+            self.drawBackground(painter)
+            self.mPixmap = pixmap
+            self.mModified = False
 
+        qp = QPainter(self)
+        qp.drawPixmap(0, 0, self.mPixmap)
 
-app = QApplication(sys.argv)
-ex = MouseTracker()
-sys.exit(app.exec_())
+    def drawBackground(self, qp):
+        func, kwargs = self.func
+        if func is not None:
+            kwargs["qp"] = qp
+            func(**kwargs)
+
+    def drawFundBlock(self, qp):
+        pen = QPen(Qt.black, 2, Qt.SolidLine)
+        pen.setStyle(Qt.DashLine)
+
+        qp.setPen(pen)
+        for i in range(1, 10):
+            qp.drawLine(self.x0, i * self.y0, self.x1, self.y0 * i)
+
+    def drawNumber(self, qp, notePoint):
+        pen = QPen(Qt.black, 2, Qt.SolidLine)
+        qp.setPen(pen)
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(notePoint, "5")
+
+    def nextRegion(self):
+        self.x0 += 30
+        self.x1 += 30
+        self.y0 += 30
+        self.y1 += 30
+
+    def keyPressEvent(self, event):
+        gey = event.key()
+        self.func = (None, None)
+        if gey == Qt.Key_M:
+            print("Key 'm' pressed!")
+        elif gey == Qt.Key_Right:
+            print("Right key pressed!, call drawFundBlock()")
+            self.func = (self.drawFundBlock, {})
+            self.mModified = True
+            self.update()
+            self.nextRegion()
+        elif gey == Qt.Key_5:
+            print("#5 pressed, call drawNumber()")
+            self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
+            self.mModified = True
+            self.update()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    myWindow = Example()
+    myWindow.show()
+    app.exec_()

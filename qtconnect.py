@@ -54,8 +54,8 @@ class WindowClass(QMainWindow, form_class):
         self.zoomin.clicked.connect(self.zoom_in)
         self.zoomout.clicked.connect(self.zoom_out)
         self.image.setScaledContents(True)
-        self.transparent.setScaledContents(True)
-        self.transparent.setStyleSheet("background-color: rgba(0, 255, 255, 90);")
+        self.gap.setRange(0,100)
+        self.gap.setSingleStep(0.5)
 
         #variables
         self.folder=""
@@ -102,9 +102,13 @@ class WindowClass(QMainWindow, form_class):
         image = dicom_data.pixel_array.astype(float)
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
-        height, width = image.shape
-        bytes_per_line = width
-        qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
+        image = np.repeat(image[..., np.newaxis], 3, -1)
+        if self.tempcrop!=[]:
+            for tup in self.tempcrop:
+                image[tup[1]][tup[0]]=[255, 0, 0]
+        height, width, rgb = image.shape
+        bytes_per_line = width*3
+        qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
         self.pixmap=QPixmap.fromImage(qimage)
         self.image.setPixmap(self.pixmap)
 
@@ -169,7 +173,8 @@ class WindowClass(QMainWindow, form_class):
 
     def mousePressEvent(self, e):
         if self.white==True:
-            self.tempcrop.append((self.posx, self.posy))
+            self.tempcrop.append((int(self.posx), int(self.posy)))
+            self.update_image()
         else:
             pass
 
@@ -209,7 +214,6 @@ class WindowClass(QMainWindow, form_class):
             newImArray=np.empty(image.shape, dtype='uint8')
             newImArray[:, :]=image[:, :]
             newImArray[:,:]=mask*newImArray[:, :]
-
             height, width = newImArray.shape
             bytes_per_line = width
             qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
