@@ -1,91 +1,72 @@
-import sys
-import os
-import pydicom
-import numpy as np
-import PyQt5.QtCore as QtCore
-from PIL import Image, ImageDraw 
-from PyQt5.QtCore import Qt, QRect, QPoint
-from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
-from PyQt5.QtWidgets import QFileDialog, QDialog, QLabel
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QFont
+from typing import List, Tuple
+from collections import deque
 
-class Example(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.mModified = True
-        self.initUI()
-        self.currentRegion = QRect(50, 50, 50, 80)
-        self.x0 = 5
-        self.x1 = 25
-        self.y0 = 5
-        self.y1 = 25
-        self.mPixmap = QPixmap()
-        self.func = (None, None)
+def largestRegion(grid: List[List[int]]) -> int:
+	m = len(grid)
+	n = len(grid[0])
 
-    def initUI(self):
-        self.setGeometry(300, 300, 280, 270)
-        self.setWindowTitle('Painter training')
-        self.show()
+	# creating a queue that will help in bfs traversal
+	q = deque()
+	area = 0
+	ans = 0
+	for i in range(m):
+		for j in range(n):
+			# if the value at any particular cell is 1 then
+			# from here we need to do the BFS traversal
+			if grid[i][j] == 1:
+				ans = 0
+				# pushing the pair(i,j) in the queue
+				q.append((i, j))
+				# marking the value 1 to -1 so that we
+				# don't again push this cell in the queue
+				grid[i][j] = -1
+				while len(q) > 0:
+					t = q.popleft()
+					ans += 1
+					x, y = t[0], t[1]
+					# now we will check in all 8 directions
+					if x + 1 < m:
+						if grid[x + 1][y] == 1:
+							q.append((x + 1, y))
+							grid[x + 1][y] = -1
+					if x - 1 >= 0:
+						if grid[x - 1][y] == 1:
+							q.append((x - 1, y))
+							grid[x - 1][y] = -1
+					if y + 1 < n:
+						if grid[x][y + 1] == 1:
+							q.append((x, y + 1))
+							grid[x][y + 1] = -1
+					if y - 1 >= 0:
+						if grid[x][y - 1] == 1:
+							q.append((x, y - 1))
+							grid[x][y - 1] = -1
+					if x + 1 < m and y + 1 < n:
+						if grid[x + 1][y + 1] == 1:
+							q.append((x + 1, y + 1))
+							grid[x + 1][y + 1] = -1
+					if x - 1 >= 0 and y + 1 < n:
+						if grid[x - 1][y + 1] == 1:
+							q.append((x - 1, y + 1))
+							grid[x - 1][y + 1] = -1
+					if x - 1 >= 0 and y - 1 >= 0:
+						if grid[x - 1][y - 1] == 1:
+							q.append((x - 1, y - 1))
+							grid[x - 1][y - 1] = -1
+					if x + 1 < m and y - 1 >= 0:
+						if grid[x + 1][y - 1] == 1:
+							q.append((x + 1, y - 1))
+							grid[x + 1][y - 1] = -1
+				area = max(area, ans)
+	return area
 
-    def paintEvent(self, event):
-        if self.mModified:
-            pixmap = QPixmap(self.size())
-            pixmap.fill(Qt.white)
-            painter = QPainter(pixmap)
-            painter.drawPixmap(0, 0, self.mPixmap)
-            self.drawBackground(painter)
-            self.mPixmap = pixmap
-            self.mModified = False
+def main():
+    grid = [[1,1,1,1,1,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,1,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,1,1,1,1,1]]
+    result = largestRegion(grid)
+    print(f'Largest region of 1s has an area of {result}')
 
-        qp = QPainter(self)
-        qp.drawPixmap(0, 0, self.mPixmap)
-
-    def drawBackground(self, qp):
-        func, kwargs = self.func
-        if func is not None:
-            kwargs["qp"] = qp
-            func(**kwargs)
-
-    def drawFundBlock(self, qp):
-        pen = QPen(Qt.black, 2, Qt.SolidLine)
-        pen.setStyle(Qt.DashLine)
-
-        qp.setPen(pen)
-        for i in range(1, 10):
-            qp.drawLine(self.x0, i * self.y0, self.x1, self.y0 * i)
-
-    def drawNumber(self, qp, notePoint):
-        pen = QPen(Qt.black, 2, Qt.SolidLine)
-        qp.setPen(pen)
-        qp.setFont(QFont('Arial', 10))
-        qp.drawText(notePoint, "5")
-
-    def nextRegion(self):
-        self.x0 += 30
-        self.x1 += 30
-        self.y0 += 30
-        self.y1 += 30
-
-    def keyPressEvent(self, event):
-        gey = event.key()
-        self.func = (None, None)
-        if gey == Qt.Key_M:
-            print("Key 'm' pressed!")
-        elif gey == Qt.Key_Right:
-            print("Right key pressed!, call drawFundBlock()")
-            self.func = (self.drawFundBlock, {})
-            self.mModified = True
-            self.update()
-            self.nextRegion()
-        elif gey == Qt.Key_5:
-            print("#5 pressed, call drawNumber()")
-            self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
-            self.mModified = True
-            self.update()
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    myWindow = Example()
-    myWindow.show()
-    app.exec_()
+main()

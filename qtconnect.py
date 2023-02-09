@@ -4,6 +4,8 @@ import pydicom
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from typing import List, Tuple
+from collections import deque
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import PyQt5.QtCore as QtCore
@@ -78,7 +80,8 @@ class WindowClass(QMainWindow, form_class):
         self.posy=0
         self.scale=1
         self.save_croped=[]
-        self.shade=100
+        self.shade=50
+        self.dic_crop={}
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -248,9 +251,9 @@ class WindowClass(QMainWindow, form_class):
             for idx2, e2 in enumerate(e1):
                 for idx3, e3 in enumerate(e2):
                     if e3<self.shade:
-                        self.save_croped[idx1][idx2][idx3]=0
+                        self.save_croped[idx1][idx2][idx3]=1
                     else:
-                        self.save_croped[idx1][idx2][idx3]=255
+                        self.save_croped[idx1][idx2][idx3]=0
         fig = Figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(projection="3d")
@@ -260,7 +263,7 @@ class WindowClass(QMainWindow, form_class):
         for idx1, e1 in enumerate(self.save_croped):
             for idx2, e2 in enumerate(e1):
                 for idx3, e3 in enumerate(e2):
-                    if e3==255:
+                    if e3==0:
                         x.append(idx2)
                         y.append(idx3)
                         z.append(self.gap.value()*int(self.crop_image[idx1][0:5]))
@@ -275,7 +278,74 @@ class WindowClass(QMainWindow, form_class):
     
     def calculate(self):
         # how to interpolate?
-        pass
+        for idx1, e1 in enumerate(self.save_croped):
+            outside_result=self.calculate_layer(np.array(e1).tolist())
+            inside_result=e1.shape[0]*e1.shape[1]-outside_result
+            all1s = np.count_nonzero(e1==1)
+            white_space=e1.shape[0]*e1.shape[1]-all1s
+            black_space=inside_result-white_space
+            slicenum=int(self.crop_image[idx1][0:5])
+            self.dic_crop[slicenum]=(inside_result, black_space)
+        print(self.dic_crop)
+
+    def calculate_layer(self, grid: List[List[int]]) -> int:
+        m = len(grid)
+        n = len(grid[0])
+
+        # creating a queue that will help in bfs traversal
+        q = deque()
+        area = 0
+        ans = 0
+        for i in range(m):
+            for j in range(n):
+                # if the value at any particular cell is 1 then
+                # from here we need to do the BFS traversal
+                if grid[i][j] == 1:
+                    ans = 0
+                    # pushing the pair(i,j) in the queue
+                    q.append((i, j))
+                    # marking the value 1 to -1 so that we
+                    # don't again push this cell in the queue
+                    grid[i][j] = -1
+                    while len(q) > 0:
+                        t = q.popleft()
+                        ans += 1
+                        x, y = t[0], t[1]
+                        # now we will check in all 8 directions
+                        if x + 1 < m:
+                            if grid[x + 1][y] == 1:
+                                q.append((x + 1, y))
+                                grid[x + 1][y] = -1
+                        if x - 1 >= 0:
+                            if grid[x - 1][y] == 1:
+                                q.append((x - 1, y))
+                                grid[x - 1][y] = -1
+                        if y + 1 < n:
+                            if grid[x][y + 1] == 1:
+                                q.append((x, y + 1))
+                                grid[x][y + 1] = -1
+                        if y - 1 >= 0:
+                            if grid[x][y - 1] == 1:
+                                q.append((x, y - 1))
+                                grid[x][y - 1] = -1
+                        if x + 1 < m and y + 1 < n:
+                            if grid[x + 1][y + 1] == 1:
+                                q.append((x + 1, y + 1))
+                                grid[x + 1][y + 1] = -1
+                        if x - 1 >= 0 and y + 1 < n:
+                            if grid[x - 1][y + 1] == 1:
+                                q.append((x - 1, y + 1))
+                                grid[x - 1][y + 1] = -1
+                        if x - 1 >= 0 and y - 1 >= 0:
+                            if grid[x - 1][y - 1] == 1:
+                                q.append((x - 1, y - 1))
+                                grid[x - 1][y - 1] = -1
+                        if x + 1 < m and y - 1 >= 0:
+                            if grid[x + 1][y - 1] == 1:
+                                q.append((x + 1, y - 1))
+                                grid[x + 1][y - 1] = -1
+                    area = max(area, ans)
+        return area
 
 
 if __name__ == "__main__":
