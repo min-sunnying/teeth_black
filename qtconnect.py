@@ -60,6 +60,7 @@ class WindowClass(QMainWindow, form_class):
         self.image.setScaledContents(True)
         self.gap.setRange(0,100)
         self.gap.setSingleStep(0.5)
+        self.ratio.clicked.connect(self.calculate)
 
         #variables
         self.folder=""
@@ -248,12 +249,21 @@ class WindowClass(QMainWindow, form_class):
                 for idx3, e3 in enumerate(e2):
                     if e3<self.shade:
                         self.save_croped[idx1][idx2][idx3]=0
+                    else:
+                        self.save_croped[idx1][idx2][idx3]=255
         fig = Figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(projection="3d")
-        x=[1]
-        y=[1]
-        z=[1]
+        x=[]
+        y=[]
+        z=[]
+        for idx1, e1 in enumerate(self.save_croped):
+            for idx2, e2 in enumerate(e1):
+                for idx3, e3 in enumerate(e2):
+                    if e3==255:
+                        x.append(idx2)
+                        y.append(idx3)
+                        z.append(self.gap.value()*int(self.crop_image[idx1][0:5]))
         ax.scatter(x,y,z, marker='o', s=15, c='darkgreen')
         canvas.draw()
         width, height = fig.figbbox.width, fig.figbbox.height
@@ -262,6 +272,9 @@ class WindowClass(QMainWindow, form_class):
         self.image.setPixmap(pixmap)
         # ratio button enable
         self.ratio.setEnabled(True)
+    
+    def calculate(self):
+        # how to interpolate?
         pass
 
 
