@@ -62,10 +62,6 @@ class WindowClass(QMainWindow, form_class):
         self.gap.setRange(0,100)
         self.gap.setSingleStep(0.5)
         self.ratio.clicked.connect(self.calculate)
-        self.shadegap.setRange(0, 100)
-        self.shadegap.setSingleStep(5)
-        self.shadegap.setValue(30)
-        self.shadegap.valueChanged.connect(self.shadechange)
 
         #variables
         self.folder=""
@@ -83,7 +79,8 @@ class WindowClass(QMainWindow, form_class):
         self.posy=0
         self.scale=2
         self.save_croped=[]
-        self.shade=self.shadegap.value()
+        self.shade=255/2
+        self.mean=0
         self.dic_crop={}
         self.temp=[]
 
@@ -254,7 +251,7 @@ class WindowClass(QMainWindow, form_class):
             #self.Showcroped.setPixmap(pixmap)
             self.crop_rw.clear()
             if index+1==len(self.crop_image):
-                self.show3d()
+                self.shadeapply()
     
     def zoom_in(self, e):
         self.scale*=2
@@ -270,10 +267,7 @@ class WindowClass(QMainWindow, form_class):
         self.transparent.resize(self.scale*size)
         self.image.resize(self.scale*size)
 
-    def shadechange(self):
-        self.shade=self.shadegap.value()
-
-    def show3d(self):
+    def shadeapply(self):
         self.temp=self.save_croped
         for idx1, e1 in enumerate(self.save_croped):
             for idx2, e2 in enumerate(e1):
@@ -282,6 +276,9 @@ class WindowClass(QMainWindow, form_class):
                         self.temp[idx1][idx2][idx3]=1
                     else:
                         self.temp[idx1][idx2][idx3]=0
+        self.show3d()
+
+    def show3d(self):
         fig = Figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(projection="3d")
