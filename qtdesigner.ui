@@ -185,7 +185,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Croped image</string>
+    <string>3D Image</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -303,7 +303,7 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QTextBrowser" name="textBrowser">
+  <widget class="QTextBrowser" name="totalresult">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -363,6 +363,22 @@
    </property>
    <property name="text">
     <string>Picture gap(mm)</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="shade_button">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>740</x>
+     <y>660</y>
+     <width>91</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Shade</string>
    </property>
   </widget>
  </widget>
