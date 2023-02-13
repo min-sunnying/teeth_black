@@ -17,7 +17,6 @@ from PyQt5.QtWidgets import QFileDialog, QDialog, QLabel
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
 
 form_class = uic.loadUiType("./qtdesigner.ui")[0]
-# np.set_printoptions(threshold=sys.maxsize)
 
 class MouseTracker(QtCore.QObject):
     positionChanged = QtCore.pyqtSignal(QtCore.QPoint)
@@ -63,6 +62,10 @@ class WindowClass(QMainWindow, form_class):
         self.gap.setRange(0,100)
         self.gap.setSingleStep(0.5)
         self.ratio.clicked.connect(self.calculate)
+        self.shadegap.setRange(0, 100)
+        self.shadegap.setSingleStep(5)
+        self.shadegap.setValue(30)
+        self.shadegap.valueChanged.connect(self.shadechange)
 
         #variables
         self.folder=""
@@ -78,10 +81,11 @@ class WindowClass(QMainWindow, form_class):
         self.crop_rw=[]
         self.posx=0
         self.posy=0
-        self.scale=1
+        self.scale=2
         self.save_croped=[]
-        self.shade=50
+        self.shade=self.shadegap.value()
         self.dic_crop={}
+        self.temp=[]
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -111,6 +115,11 @@ class WindowClass(QMainWindow, form_class):
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
         image = (np.maximum(image,0)/image.max())*255
+        image = np.uint8(image)
+        height, width= image.shape
+        image = Image.fromarray(image)
+        image = image.resize((height*2, width*2), Image.BICUBIC)
+        image = np.array(image)
         image = np.uint8(image)
         height, width= image.shape
         bytes_per_line = width
@@ -171,6 +180,12 @@ class WindowClass(QMainWindow, form_class):
         image = dicom_data.pixel_array.astype(float)
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
+        height, width= image.shape
+        image = Image.fromarray(image)
+        image = image.resize((height*2, width*2), Image.BICUBIC)
+        image = np.array(image)
+        image = np.uint8(image)
+        height, width= image.shape
         image = np.repeat(image[..., np.newaxis], 3, -1)
         if self.tempcrop!=[]:
             for tup in self.tempcrop:
@@ -180,6 +195,7 @@ class WindowClass(QMainWindow, form_class):
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
         self.pixmap=QPixmap.fromImage(qimage)
         self.image.setPixmap(self.pixmap)
+        self.resizeimage()
 
     def mousePressEvent(self, e):
         if self.white==True:
@@ -196,7 +212,7 @@ class WindowClass(QMainWindow, form_class):
         self.label_position.setText("(%d, %d)" % (pos.x()/self.scale, pos.y()/self.scale))
         self.label_position.adjustSize()
         self.posx=pos.x()/self.scale
-        self.posy=pos.y()/self.scale  
+        self.posy=pos.y()/self.scale
 
     def whitecrop(self):
         self.white=True
@@ -208,6 +224,8 @@ class WindowClass(QMainWindow, form_class):
             self.tempcrop=[]
             self.white=False
             self.croped_image_show(True, self.current_index)
+        else:
+            self.show3d()
 
     def croped_image_show(self, white, index):
         if white==True:
@@ -216,6 +234,12 @@ class WindowClass(QMainWindow, form_class):
             image = dicom_data.pixel_array.astype(float)
             image = (np.maximum(image,0)/image.max())*255
             image = np.uint8(image)
+            height, width= image.shape
+            image = Image.fromarray(image)
+            image = image.resize((height*2, width*2), Image.BICUBIC)
+            image = np.array(image)
+            image = np.uint8(image)
+            height, width= image.shape
             maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
             ImageDraw.Draw(maskIm).polygon(self.crop_rw[0], outline=1, fill=1)
             mask=np.array(maskIm)
@@ -225,9 +249,9 @@ class WindowClass(QMainWindow, form_class):
             self.save_croped.append(newImArray)
             height, width = newImArray.shape
             bytes_per_line = width
-            qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
-            pixmap=QPixmap.fromImage(qimage)
-            self.Showcroped.setPixmap(pixmap)
+            #qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
+            #pixmap=QPixmap.fromImage(qimage)
+            #self.Showcroped.setPixmap(pixmap)
             self.crop_rw.clear()
             if index+1==len(self.crop_image):
                 self.show3d()
@@ -246,39 +270,46 @@ class WindowClass(QMainWindow, form_class):
         self.transparent.resize(self.scale*size)
         self.image.resize(self.scale*size)
 
+    def shadechange(self):
+        self.shade=self.shadegap.value()
+
     def show3d(self):
+        self.temp=self.save_croped
         for idx1, e1 in enumerate(self.save_croped):
             for idx2, e2 in enumerate(e1):
                 for idx3, e3 in enumerate(e2):
                     if e3<self.shade:
-                        self.save_croped[idx1][idx2][idx3]=1
+                        self.temp[idx1][idx2][idx3]=1
                     else:
-                        self.save_croped[idx1][idx2][idx3]=0
+                        self.temp[idx1][idx2][idx3]=0
         fig = Figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(projection="3d")
         x=[]
         y=[]
         z=[]
-        for idx1, e1 in enumerate(self.save_croped):
+        for idx1, e1 in enumerate(self.temp):
             for idx2, e2 in enumerate(e1):
                 for idx3, e3 in enumerate(e2):
                     if e3==0:
                         x.append(idx2)
                         y.append(idx3)
-                        z.append(self.gap.value()*int(self.crop_image[idx1][0:5]))
+                        z.append(-self.gap.value()*int(self.crop_image[idx1][0:5]))
         ax.scatter(x,y,z, marker='o', s=15, c='darkgreen')
+        ax.grid(visible=None)
+        ax.axis('off')
         canvas.draw()
         width, height = fig.figbbox.width, fig.figbbox.height
         img = QImage(canvas.buffer_rgba(), width, height, QImage.Format_ARGB32)
         pixmap = QPixmap(img)
-        self.image.setPixmap(pixmap)
+        self.Showcroped.setPixmap(pixmap)
         # ratio button enable
         self.ratio.setEnabled(True)
+        self.resizeimage()
     
     def calculate(self):
         # how to interpolate?
-        for idx1, e1 in enumerate(self.save_croped):
+        for idx1, e1 in enumerate(self.temp):
             outside_result=self.calculate_layer(np.array(e1).tolist())
             inside_result=e1.shape[0]*e1.shape[1]-outside_result
             all1s = np.count_nonzero(e1==1)

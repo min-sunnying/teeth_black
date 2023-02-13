@@ -10,6 +10,12 @@
     <height>909</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -42,9 +48,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>950</x>
+     <x>1080</x>
      <y>660</y>
-     <width>91</width>
+     <width>111</width>
      <height>71</height>
     </rect>
    </property>
@@ -146,7 +152,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>780</x>
+     <x>640</x>
      <y>660</y>
      <width>91</width>
      <height>71</height>
