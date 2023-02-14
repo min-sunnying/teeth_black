@@ -314,8 +314,8 @@ class WindowClass(QMainWindow, form_class):
                         y.append(idx3)
                         z.append(-self.gap.value()*int(self.crop_image[idx1][0][0:5]))
         ax.scatter(x,y,z, marker='o', s=15, c='darkgreen')
-        ax.grid(visible=None)
-        ax.axis('off')
+        #ax.grid(visible=None)
+        #ax.axis('off')
         canvas.draw()
         width, height = fig.figbbox.width, fig.figbbox.height
         img = QImage(canvas.buffer_rgba(), width, height, QImage.Format_ARGB32)
@@ -328,13 +328,13 @@ class WindowClass(QMainWindow, form_class):
     #calculate the each volumn
     def calculate(self):
         # how to interpolate?
-        for idx1, e1 in enumerate(self.temp):
+        for idx1, e1 in enumerate(self.save_croped):
             outside_result=self.calculate_layer(np.array(e1).tolist())
             inside_result=e1.shape[0]*e1.shape[1]-outside_result
             all1s = np.count_nonzero(e1==1)
             white_space=e1.shape[0]*e1.shape[1]-all1s
             black_space=inside_result-white_space
-            slicenum=int(self.crop_image[idx1][0:5])
+            slicenum=self.crop_image[idx1][1]
             self.dic_crop[slicenum]=(inside_result, black_space)
         print(self.dic_crop)
         white_volume=self.dic_crop
@@ -413,7 +413,7 @@ class WindowClass(QMainWindow, form_class):
         for key in iter(sorted(b.keys())):
             black_volume+=key*self.gap.value()/3*(b[key][0]+b[next(iter(sorted(w.keys())))][0]+(b[key][0]*w[next(iter(sorted(b.keys())))][0])**(1/2))
         print(white_volume, black_volume)
-        self.totalresult.append(white_volume, black_volume)
+        self.totalresult.append(str((white_volume, black_volume)))
         pass
 
 if __name__ == "__main__":
