@@ -233,12 +233,9 @@ class WindowClass(QMainWindow, form_class):
             self.crop_rw.append(self.tempcrop)
             self.croped_result.append('|'.join(str(e) for e in self.tempcrop))
             self.tempcrop=[]
-            self.mean=[]
             self.white=False
             self.shadeb=False
             self.croped_image_show(True, self.current_index)
-        else:
-            self.show3d()
 
     def croped_image_show(self, white, index):
         if white==True:
@@ -259,16 +256,28 @@ class WindowClass(QMainWindow, form_class):
             newImArray=np.empty(image.shape, dtype='uint8')
             newImArray[:, :]=image[:, :]
             newImArray[:,:]=mask*newImArray[:, :]
+            #add shade
+            for m in self.mean:
+                self.shade+=newImArray[m[1]][m[0]]
+            self.shade/=len(self.mean)
+            self.shade=int(self.shade)
+            self.mean=[]
+            for idx1, e1 in enumerate(newImArray):
+                for idx2, e2 in enumerate(e1):
+                    if e2<=self.shade:
+                        newImArray[idx1][idx2]=1
+                    else:
+                        newImArray[idx1][idx2]=0
+            self.shade=0
             self.save_croped.append(newImArray)
-            height, width = newImArray.shape
-            bytes_per_line = width
+            # height, width = newImArray.shape
+            # bytes_per_line = width
             #qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
             #pixmap=QPixmap.fromImage(qimage)
             #self.Showcroped.setPixmap(pixmap)
             self.crop_rw.clear()
             if index+1==len(self.crop_image):
-                self.shadeapply()
-                # fix
+                self.show3d()
     
     #zoom in out function
     def zoom_in(self, e):
@@ -288,25 +297,6 @@ class WindowClass(QMainWindow, form_class):
     #caculate shade(find contour)
     def shadeclick(self):
         self.shadeb=True
-        pass
-
-    def shadeapply(self):
-        for m in self.mean:
-            print(m)
-            print(self.mean)
-            print(self.current_index)
-            self.shade+=self.save_croped[self.current_index][m[1]][m[0]]
-        self.shade/=len(self.mean)
-        self.shade=int(self.shade)
-        self.temp=self.save_croped
-        for idx1, e1 in enumerate(self.save_croped):
-            for idx2, e2 in enumerate(e1):
-                for idx3, e3 in enumerate(e2):
-                    if e3<=self.shade:
-                        self.temp[idx1][idx2][idx3]=1
-                    else:
-                        self.temp[idx1][idx2][idx3]=0
-        self.show3d()
 
     # draw 3d plot
     def show3d(self):
@@ -316,7 +306,7 @@ class WindowClass(QMainWindow, form_class):
         x=[]
         y=[]
         z=[]
-        for idx1, e1 in enumerate(self.temp):
+        for idx1, e1 in enumerate(self.save_croped):
             for idx2, e2 in enumerate(e1):
                 for idx3, e3 in enumerate(e2):
                     if e3==0:
