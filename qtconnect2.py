@@ -4,6 +4,7 @@ import pydicom
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from typing import List, Tuple
 from collections import deque
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -79,6 +80,7 @@ class WindowClass(QMainWindow, form_class):
         self.shadeb=False
         self.tempcrop=[]
         self.crop_rw=[]
+        self.crop_poly=[]
         self.posx=0
         self.posy=0
         self.scale=2
@@ -232,6 +234,7 @@ class WindowClass(QMainWindow, form_class):
         if self.white==True:
             self.crop_rw.append(self.tempcrop)
             self.croped_result.append('|'.join(str(e) for e in self.tempcrop))
+            self.crop_poly.append((self.tempcrop, self.current_index))
             self.tempcrop=[]
             self.white=False
             self.shadeb=False
@@ -300,7 +303,7 @@ class WindowClass(QMainWindow, form_class):
 
     # draw 3d plot
     def show3d(self):
-        fig = Figure()
+        fig = plt.figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(projection="3d")
         x=[]
@@ -313,7 +316,20 @@ class WindowClass(QMainWindow, form_class):
                         x.append(idx2)
                         y.append(idx3)
                         z.append(-self.gap.value()*int(self.crop_image[idx1][0][0:5]))
-        ax.scatter(x,y,z, marker='o', s=15, c='darkgreen')
+        ax.scatter(x,y,z, marker='o', s=15, c='darkgreen', alpha=.25)
+        # for (element, index) in self.crop_poly:
+        #     x1=[]
+        #     y1=[]
+        #     z1=[]
+        #     for e in element:
+        #         x1.append(e[0])
+        #         y1.append(e[1])
+        #         z1.append(-index*self.gap.value())
+        #     ax=Axes3D(fig, auto_add_to_figure=False)
+        #     fig.add_axes(ax)
+        #     verts=[list(zip(x1,y1,z1))]
+        #     print(verts)
+        #     ax.add_collection3d(Poly3DCollection(verts))
         #ax.grid(visible=None)
         #ax.axis('off')
         canvas.draw()
@@ -336,13 +352,13 @@ class WindowClass(QMainWindow, form_class):
             black_space=inside_result-white_space
             slicenum=self.crop_image[idx1][1]
             self.dic_crop[slicenum]=(inside_result, black_space)
-        print(self.dic_crop)
-        white_volume=self.dic_crop
+        white_volume=self.dic_crop.copy()
         white_volume[self.white_start[0][1]]=(0, 0)
         white_volume[self.white_end[0][1]]=(0, 0)
-        black_volume=self.dic_crop
+        black_volume=self.dic_crop.copy()
         black_volume[self.black_start[0][1]]=(0, 0)
         black_volume[self.black_end[0][1]]=(0, 0)
+        print(white_volume, black_volume)
         self.calculate_done(white_volume, black_volume)
 
     def calculate_layer(self, grid: List[List[int]]) -> int:
@@ -409,12 +425,10 @@ class WindowClass(QMainWindow, form_class):
         white_volume=0
         black_volume=0
         for key in iter(sorted(w.keys())):
-            white_volume+=key*self.gap.value()/3*(w[key][0]+w[next(iter(sorted(w.keys())))][0]+(w[key][0]*w[next(iter(sorted(w.keys())))][0])**(1/2))
+            white_volume+=(key-next(iter(sorted(w.keys()))))*self.gap.value()/3*(w[key][0]+w[next(iter(sorted(w.keys())))][0]+(w[key][0]*w[next(iter(sorted(w.keys())))][0])**(1/2))
         for key in iter(sorted(b.keys())):
-            black_volume+=key*self.gap.value()/3*(b[key][0]+b[next(iter(sorted(w.keys())))][0]+(b[key][0]*w[next(iter(sorted(b.keys())))][0])**(1/2))
-        print(white_volume, black_volume)
-        self.totalresult.append(str((white_volume, black_volume)))
-        pass
+            black_volume+=(key-next(iter(sorted(b.keys()))))*self.gap.value()/3*(b[key][1]+b[next(iter(sorted(b.keys())))][1]+(b[key][1]*b[next(iter(sorted(b.keys())))][1])**(1/2))
+        self.totalresult.append(str((abs(white_volume)-abs(black_volume),abs(black_volume))))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
