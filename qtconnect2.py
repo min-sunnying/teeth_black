@@ -3,6 +3,7 @@ import os
 import pydicom
 import numpy as np
 import matplotlib.pyplot as plt
+from watchpoints import watch
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from typing import List, Tuple
@@ -13,7 +14,7 @@ import PyQt5.QtCore as QtCore
 from PIL import Image, ImageDraw 
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
 from PyQt5.QtWidgets import QFileDialog, QDialog, QLabel
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
 
@@ -48,15 +49,16 @@ class WindowClass(QMainWindow, form_class):
 
         #UI connection
         self.select_folder.clicked.connect(self.selectfolder)
-        self.slider.valueChanged.connect(self.update_image)
-        self.slider2.setDisabled(True)
-        self.slider2.valueChanged.connect(self.selected_image)
+        self.slider.valueChanged.connect(self.sliderchange)
+        # self.slider2.setDisabled(True)
+        # self.slider2.valueChanged.connect(self.selected_image)
         self.white_s.clicked.connect(self.whitestart)
         self.white_e.clicked.connect(self.whiteend)
         self.black_s.clicked.connect(self.blackstart)
         self.black_e.clicked.connect(self.blackend)
-        self.add_crop.clicked.connect(self.cropimage)
-        self.submit.clicked.connect(self.submitted)
+        self.add_slice.clicked.connect(self.cropimage)
+        self.delete_slice.clicked.connect(self.deleteimage)
+        self.submit.clicked.connect(self.progress5)
         self.white_pen.clicked.connect(self.whitecrop)
         self.crop.clicked.connect(self.cropbutton)
         self.zoomin.clicked.connect(self.zoom_in)
@@ -64,8 +66,22 @@ class WindowClass(QMainWindow, form_class):
         self.image.setScaledContents(True)
         self.gap.setRange(0,100)
         self.gap.setSingleStep(0.5)
+        self.gap.valueChanged.connect(self.progress4)
         self.ratio.clicked.connect(self.calculate)
         self.shade_button.clicked.connect(self.shadeclick)
+        self.whitestartbox.setSingleStep(1)
+        self.whiteendbox.setSingleStep(1)
+        self.blackstartbox.setSingleStep(1)
+        self.blackendbox.setSingleStep(1)
+        self.prev.pressed.connect(self.prevchange)
+        self.next.pressed.connect(self.nextchange)
+        self.slicetable.doubleClicked.connect(self.tabledoubleclickchange)
+        self.whitestartbox.valueChanged.connect(self.progress2)
+        self.whiteendbox.valueChanged.connect(self.progress2)
+        self.blackstartbox.valueChanged.connect(self.progress2)
+        self.blackendbox.valueChanged.connect(self.progress2)
+        self.submit_point.clicked.connect(self.progress2submit)
+        #self.slicebox.valueChanged.connect(self.slicenum)
 
         #variables
         self.folder=""
@@ -83,12 +99,13 @@ class WindowClass(QMainWindow, form_class):
         self.crop_poly=[]
         self.posx=0
         self.posy=0
-        self.scale=2
+        self.scale=1
         self.save_croped=[]
         self.shade=0
         self.mean=[]
         self.dic_crop={}
         self.temp=[]
+        watch(self.current_index, callback=self.cindex)
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -110,11 +127,40 @@ class WindowClass(QMainWindow, form_class):
         self.files = sorted(self.files)
         self.slider.setRange(0, len(self.files)-1)
         self.foldername.append(self.folder)
+        self.progress1()
         self.update_image()
     
+    def cindex(self, frame, elem, exeinfo):
+        self.slider.setValue(self.current_index)
+        self.slicebox.setValue(self.current_index)
+        self.currentindex.clear()
+        self.currentindex.append(str(self.current_index))
+
+    def sliderchange(self):
+        self.current_index=self.slider.value()
+        self.update_image()
+    
+    def prevchange(self):
+        if self.current_index!=0:
+            self.current_index-=1
+        self.slider.setValue(self.current_index)
+        self.update_image()
+
+    def nextchange(self):
+        if self.current_index!=len(self.files):
+            self.current_index+=1
+        self.slider.setValue(self.current_index)
+        self.update_image()
+
+    def tabledoubleclickchange(self):
+        row=self.slicetable.currentRow()
+        index=int(self.slicetable.item(row, 0).text())
+        self.current_index=index
+        self.slider.setValue(self.current_index)
+        self.update_image()
+
     #read images and show on the label with qpixmap + resolution *2
     def update_image(self):
-        self.current_index=self.slider.value()
         file_path = os.path.join(self.folder, self.files[self.current_index])
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
@@ -133,56 +179,126 @@ class WindowClass(QMainWindow, form_class):
 
     #save the starting and ending points of teeth
     def whitestart(self):
-        self.white_start.append((self.files[self.current_index], self.current_index))
-        self.result.append(self.files[self.current_index])
+        self.whitestartbox.setValue(self.current_index)
     
     def whiteend(self):
-        self.white_end.append((self.files[self.current_index], self.current_index))
-        self.result.append(self.files[self.current_index])
+        self.whiteendbox.setValue(self.current_index)
 
     def blackstart(self):
-        self.black_start.append((self.files[self.current_index], self.current_index))
-        self.result.append(self.files[self.current_index])
+        self.blackstartbox.setValue(self.current_index)
 
     def blackend(self):
-        self.black_end.append((self.files[self.current_index], self.current_index))
-        self.result.append(self.files[self.current_index])
+        self.blackendbox.setValue(self.current_index)
+
+    def progress2submit(self):
+        self.white_start.append((self.files[self.whitestartbox.value()], self.whitestartbox.value()))
+        self.white_end.append((self.files[self.whiteendbox.value()], self.whiteendbox.value()))
+        self.black_start.append((self.files[self.blackstartbox.value()], self.blackstartbox.value()))
+        self.black_end.append((self.files[self.blackendbox.value()], self.blackendbox.value()))
+        self.progress3()
 
     #save the images to crop
     def cropimage(self):
-        self.crop_image.append((self.files[self.current_index], self.current_index))
-        self.result.append(self.files[self.current_index])
+        self.crop_image.append((self.files[self.slicebox.value()], self.slicebox.value()))
+        row=self.slicetable.rowCount()
+        self.slicetable.insertRow(row)
+        self.slicetable.setItem(row, 0, QTableWidgetItem(str(self.current_index)))
+        print(self.slicetable.rowCount())
+    
+    def deleteimage(self):
+        if self.slicetable.currentRow()<0:
+            return QMessageBox.warning(self, 'Warning', 'Please select the record to delete!')
+        row=self.slicetable.currentRow()
+        index=self.slicetable.item(row, 0).text()
+        self.crop_image=list(filter(lambda x: x[1]!=int(index), self.crop_image))
+        self.slicetable.removeRow(row)
 
-    #go to the next step->crop image. change the button status
-    def submitted(self):
-        if len(self.crop_image)!=0 and len(self.white_start)==1 and len(self.white_end)==1 and len(self.black_start)==1 and len(self.black_end)==1:
-            self.white_s.setDisabled(True)
-            self.white_e.setDisabled(True)
-            self.black_s.setDisabled(True)
-            self.black_e.setDisabled(True)
-            self.add_crop.setDisabled(True)
-            self.current_index=0
-            self.slider2.setRange(0, len(self.crop_image)-1)
-            self.slider2.setEnabled(True)
-            self.slider.setDisabled(True)
-            self.white_pen.setEnabled(True)
+    def progress1(self):
+        #disable
+        self.foldername.setDisabled(True)
+        self.select_folder.setDisabled(True)
+        #enable
+        self.currentindex.setEnabled(True)
+        self.image_control.setEnabled(True)
+        self.zoomin.setEnabled(True)
+        self.zoomout.setEnabled(True)
+        self.slider.setEnabled(True)
+        self.prev.setEnabled(True)
+        self.next.setEnabled(True)
+        self.white_s.setEnabled(True)
+        self.white_e.setEnabled(True)
+        self.black_s.setEnabled(True)
+        self.black_e.setEnabled(True)
+        self.whitestartbox.setEnabled(True)
+        self.whiteendbox.setEnabled(True)
+        self.blackstartbox.setEnabled(True)
+        self.blackendbox.setEnabled(True)
+    
+    def progress2(self):
+        if self.whitestartbox.value()!=0 and self.whiteendbox.value()!=0 and self.blackstartbox.value()!=0 and self.blackendbox.value()!=0:
+            #enable
+            self.submit_point.setEnabled(True)
+
+    def progress3(self):
+        #disable
+        self.white_s.setDisabled(True)
+        self.white_e.setDisabled(True)
+        self.black_s.setDisabled(True)
+        self.black_e.setDisabled(True)
+        self.whitestartbox.setDisabled(True)
+        self.whiteendbox.setDisabled(True)
+        self.blackstartbox.setDisabled(True)
+        self.blackendbox.setDisabled(True)
+        self.submit_point.setDisabled(True)
+        #enable
+        self.slicetable.setEnabled(True)
+        self.slicebox.setEnabled(True)
+        self.add_slice.setEnabled(True)
+        self.delete_slice.setEnabled(True)
+        self.slicegap.setEnabled(True)
+        self.gap.setEnabled(True)
+    
+    def progress4(self):
+        #enable
+        if self.gap.value()!=0:
+            self.submit.setEnabled(True)
+    
+    def progress5(self):
+        #disable
+        self.slicetable.setDisabled(True)
+        self.slicebox.setDisabled(True)
+        self.add_slice.setDisabled(True)
+        self.delete_slice.setDisabled(True)
+        self.slicegap.setDisabled(True)
+        self.gap.setDisabled(True)   
+        self.submit.setDisabled(True)     
+        #enable
+        self.white_pen.setEnabled(True)
+        self.shade_button.setEnabled(True)
+        self.croped_result.setEnabled(True)
+        self.image3d.setEnabled(True)
+        #else
+        self.current_index=0
+        self.slider.setRange(0, len(self.crop_image)-1)
+        self.selected_image()
+
+    def progress6(self):
+        if self.white==True and self.shadeb==True:
+            #enable
             self.crop.setEnabled(True)
-            self.croped_result.setEnabled(True)
-            self.shade_button.setEnabled(True)
-            self.selected_image()
         else:
-            self.white_start.clear()
-            self.white_end.clear()
-            self.black_start.clear()
-            self.black_end.clear()
-            self.crop_image.clear()
-            self.result.clear()
-            dlg = QDialog(self)
-            dlg.setWindowTitle("Error")
-            dlg.exec()
+            self.crop.setDisabled(True)
+        if len(self.save_croped)==len(self.crop_image):
+            self.ratio.setEnabled(True)
+            self.caninevolume.setEnabled(True)
+            self.cavityvolume.setEnabled(True)
+            self.volumeratio.setEnabled(True)
+            self.resultcanine.setEnabled(True)
+            self.resultcavity.setEnabled(True)
+            self.resultratio.setEnabled(True)
 
     def selected_image(self):
-        self.current_index=self.slider2.value()
+        #self.current_index=self.slider.value()
         file_path = os.path.join(self.folder, self.crop_image[self.current_index][0])
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
@@ -207,6 +323,7 @@ class WindowClass(QMainWindow, form_class):
         self.pixmap=QPixmap.fromImage(qimage)
         self.image.setPixmap(self.pixmap)
         self.resizeimage()
+        self.progress6()
 
     def mousePressEvent(self, e):
         if self.white==True and self.shadeb==False:
@@ -284,11 +401,11 @@ class WindowClass(QMainWindow, form_class):
     
     #zoom in out function
     def zoom_in(self, e):
-        self.scale*=2
+        self.scale*=1.5
         self.resizeimage()
     
     def zoom_out(self, e):
-        self.scale/=2
+        self.scale=1
         self.resizeimage()
 
     def resizeimage(self):
@@ -331,14 +448,15 @@ class WindowClass(QMainWindow, form_class):
         #     print(verts)
         #     ax.add_collection3d(Poly3DCollection(verts))
         #ax.grid(visible=None)
-        #ax.axis('off')
+        ax.axis('off')
         canvas.draw()
         width, height = fig.figbbox.width, fig.figbbox.height
         img = QImage(canvas.buffer_rgba(), width, height, QImage.Format_ARGB32)
         pixmap = QPixmap(img)
-        self.Showcroped.setPixmap(pixmap)
+        self.image3d.setPixmap(pixmap)
         # ratio button enable
         self.ratio.setEnabled(True)
+        self.progress6()
         self.resizeimage()
     
     #calculate the each volumn
@@ -428,7 +546,11 @@ class WindowClass(QMainWindow, form_class):
             white_volume+=(key-next(iter(sorted(w.keys()))))*self.gap.value()/3*(w[key][0]+w[next(iter(sorted(w.keys())))][0]+(w[key][0]*w[next(iter(sorted(w.keys())))][0])**(1/2))
         for key in iter(sorted(b.keys())):
             black_volume+=(key-next(iter(sorted(b.keys()))))*self.gap.value()/3*(b[key][1]+b[next(iter(sorted(b.keys())))][1]+(b[key][1]*b[next(iter(sorted(b.keys())))][1])**(1/2))
-        self.totalresult.append(str((abs(white_volume)-abs(black_volume),abs(black_volume))))
+        self.resultcanine.append(str(abs(white_volume)))
+        self.resultcavity.append(str(abs(black_volume)))
+        if (abs(white_volume)-abs(black_volume))==0:
+            return
+        self.resultratio.append(str(abs(black_volume)/(abs(white_volume)-abs(black_volume))))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
