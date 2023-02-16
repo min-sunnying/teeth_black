@@ -81,7 +81,7 @@ class WindowClass(QMainWindow, form_class):
         self.blackstartbox.valueChanged.connect(self.progress2)
         self.blackendbox.valueChanged.connect(self.progress2)
         self.submit_point.clicked.connect(self.progress2submit)
-        #self.slicebox.valueChanged.connect(self.slicenum)
+        self.slicebox.valueChanged.connect(self.slicenum)
         self.image_control.clicked.connect(self.imagecontrol)
 
         #variables
@@ -100,7 +100,7 @@ class WindowClass(QMainWindow, form_class):
         self.crop_poly=[]
         self.posx=0
         self.posy=0
-        self.scale=1
+        self.scale=0.5
         self.save_croped=[]
         self.shade=0
         self.mean=[]
@@ -178,6 +178,11 @@ class WindowClass(QMainWindow, form_class):
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
         self.pixmap=QPixmap.fromImage(qimage)
         self.image.setPixmap(self.pixmap)
+
+    def slicenum(self):
+        self.current_index=self.slicebox.value()
+        self.slider.setValue(self.current_index)
+        self.update_image()
 
     #save the starting and ending points of teeth
     def whitestart(self):
