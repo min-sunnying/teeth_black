@@ -108,6 +108,7 @@ class WindowClass(QMainWindow, form_class):
         self.temp=[]
         watch(self.current_index, callback=self.cindex)
         self.hu=False
+        self.progress5_start=False
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -140,19 +141,28 @@ class WindowClass(QMainWindow, form_class):
 
     def sliderchange(self):
         self.current_index=self.slider.value()
-        self.update_image()
+        if self.progress5_start==False:
+            self.update_image()
+        else:
+            self.selected_image()
     
     def prevchange(self):
         if self.current_index!=0:
             self.current_index-=1
         self.slider.setValue(self.current_index)
-        self.update_image()
+        if self.progress5_start==False:
+            self.update_image()
+        else:
+            self.selected_image()
 
     def nextchange(self):
         if self.current_index!=len(self.files):
             self.current_index+=1
         self.slider.setValue(self.current_index)
-        self.update_image()
+        if self.progress5_start==False:
+            self.update_image()
+        else:
+            self.selected_image()
 
     def tabledoubleclickchange(self):
         row=self.slicetable.currentRow()
@@ -166,6 +176,8 @@ class WindowClass(QMainWindow, form_class):
         file_path = os.path.join(self.folder, self.files[self.current_index])
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
+        if self.hu==True:
+            image=self.transform_to_hu(image, 400, 1800)
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
         height, width= image.shape
@@ -288,6 +300,7 @@ class WindowClass(QMainWindow, form_class):
         self.current_index=0
         self.slider.setRange(0, len(self.crop_image)-1)
         self.selected_image()
+        self.progress5_start=True
 
     def progress6(self):
         if self.white==True and self.shadeb==True:
@@ -414,7 +427,7 @@ class WindowClass(QMainWindow, form_class):
         self.resizeimage()
     
     def zoom_out(self, e):
-        self.scale=1
+        self.scale=0.5
         self.resizeimage()
 
     def resizeimage(self):
@@ -438,7 +451,10 @@ class WindowClass(QMainWindow, form_class):
             self.hu=False
         else:
             self.hu=True
-        self.selected_image()
+        if self.progress5_start==True:
+            self.selected_image()
+        else:
+            self.update_image()
 
     # draw 3d plot
     def show3d(self):
