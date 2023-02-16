@@ -290,7 +290,8 @@ class WindowClass(QMainWindow, form_class):
         self.delete_slice.setDisabled(True)
         self.slicegap.setDisabled(True)
         self.gap.setDisabled(True)   
-        self.submit.setDisabled(True)     
+        self.submit.setDisabled(True)  
+        self.currentindex.setDisabled(True)   
         #enable
         self.white_pen.setEnabled(True)
         self.shade_button.setEnabled(True)
