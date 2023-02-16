@@ -82,6 +82,7 @@ class WindowClass(QMainWindow, form_class):
         self.blackendbox.valueChanged.connect(self.progress2)
         self.submit_point.clicked.connect(self.progress2submit)
         #self.slicebox.valueChanged.connect(self.slicenum)
+        self.image_control.clicked.connect(self.imagecontrol)
 
         #variables
         self.folder=""
@@ -106,6 +107,7 @@ class WindowClass(QMainWindow, form_class):
         self.dic_crop={}
         self.temp=[]
         watch(self.current_index, callback=self.cindex)
+        self.hu=False
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -302,6 +304,8 @@ class WindowClass(QMainWindow, form_class):
         file_path = os.path.join(self.folder, self.crop_image[self.current_index][0])
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
+        if self.hu==True:
+            image=self.transform_to_hu(image, 400, 1800)
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
         height, width= image.shape
@@ -417,6 +421,19 @@ class WindowClass(QMainWindow, form_class):
     #caculate shade(find contour)
     def shadeclick(self):
         self.shadeb=True
+    
+    def transform_to_hu(self, image, level, window):
+        max=level+window/2
+        min=level-window/2
+        image=image.clip(min, max)
+        return image
+
+    def imagecontrol(self):
+        if self.hu==True:
+            self.hu=False
+        else:
+            self.hu=True
+        self.selected_image()
 
     # draw 3d plot
     def show3d(self):
