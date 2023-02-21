@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1099</width>
+    <width>1092</width>
     <height>829</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Teeth Calulator</string>
   </property>
   <widget class="QToolButton" name="select_folder">
    <property name="geometry">
@@ -48,10 +48,10 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>1000</x>
-     <y>580</y>
-     <width>81</width>
-     <height>61</height>
+     <x>980</x>
+     <y>560</y>
+     <width>101</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -161,9 +161,9 @@
    <property name="geometry">
     <rect>
      <x>560</x>
-     <y>580</y>
-     <width>211</width>
-     <height>61</height>
+     <y>560</y>
+     <width>131</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -177,7 +177,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>560</y>
+     <y>570</y>
      <width>501</width>
      <height>20</height>
     </rect>
@@ -193,7 +193,7 @@
    <property name="geometry">
     <rect>
      <x>560</x>
-     <y>50</y>
+     <y>40</y>
      <width>512</width>
      <height>512</height>
     </rect>
@@ -211,10 +211,10 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>1000</x>
-     <y>650</y>
-     <width>81</width>
-     <height>71</height>
+     <x>660</x>
+     <y>730</y>
+     <width>91</width>
+     <height>91</height>
     </rect>
    </property>
    <property name="text">
@@ -228,9 +228,9 @@
    <property name="geometry">
     <rect>
      <x>560</x>
-     <y>650</y>
-     <width>431</width>
-     <height>71</height>
+     <y>530</y>
+     <width>521</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -247,7 +247,7 @@
     <bool>false</bool>
    </property>
    <property name="alignment">
-    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+    <set>Qt::AlignCenter</set>
    </property>
    <widget class="QWidget" name="scrollAreaWidgetContents">
     <property name="geometry">
@@ -298,6 +298,9 @@
      <property name="scaledContents">
       <bool>false</bool>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
     </widget>
    </widget>
   </widget>
@@ -307,9 +310,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>680</x>
+     <x>890</x>
      <y>730</y>
-     <width>401</width>
+     <width>191</width>
      <height>31</height>
     </rect>
    </property>
@@ -320,7 +323,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>340</x>
+     <x>330</x>
      <y>10</y>
      <width>88</width>
      <height>27</height>
@@ -336,7 +339,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>440</x>
+     <x>430</x>
      <y>10</y>
      <width>88</width>
      <height>27</height>
@@ -381,10 +384,10 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>790</x>
-     <y>580</y>
-     <width>201</width>
-     <height>61</height>
+     <x>700</x>
+     <y>560</y>
+     <width>131</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -535,7 +538,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>220</x>
+     <x>210</x>
      <y>10</y>
      <width>111</width>
      <height>27</height>
@@ -596,7 +599,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>560</x>
+     <x>770</x>
      <y>730</y>
      <width>111</width>
      <height>31</height>
@@ -612,7 +615,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>560</x>
+     <x>770</x>
      <y>760</y>
      <width>111</width>
      <height>31</height>
@@ -628,9 +631,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>680</x>
+     <x>890</x>
      <y>760</y>
-     <width>401</width>
+     <width>191</width>
      <height>31</height>
     </rect>
    </property>
@@ -641,9 +644,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>680</x>
+     <x>890</x>
      <y>790</y>
-     <width>401</width>
+     <width>191</width>
      <height>31</height>
     </rect>
    </property>
@@ -654,7 +657,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>560</x>
+     <x>770</x>
      <y>790</y>
      <width>111</width>
      <height>31</height>
@@ -690,6 +693,51 @@
    </property>
    <property name="displayIntegerBase">
     <number>10</number>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="view3d">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>730</y>
+     <width>91</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>3D View</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="masktable">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>600</y>
+     <width>521</width>
+     <height>121</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="delete_mask">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>840</x>
+     <y>560</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Delete</string>
    </property>
   </widget>
  </widget>

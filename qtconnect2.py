@@ -15,8 +15,8 @@ from PIL import Image, ImageDraw
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
-from PyQt5.QtWidgets import QFileDialog, QDialog, QLabel
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
+from PyQt5.QtWidgets import QFileDialog, QLabel
+from PyQt5.QtGui import QImage, QPixmap
 
 #qtdesigner import
 form_class = uic.loadUiType("./qtdesigner.ui")[0]
@@ -50,8 +50,6 @@ class WindowClass(QMainWindow, form_class):
         #UI connection
         self.select_folder.clicked.connect(self.selectfolder)
         self.slider.valueChanged.connect(self.sliderchange)
-        # self.slider2.setDisabled(True)
-        # self.slider2.valueChanged.connect(self.selected_image)
         self.white_s.clicked.connect(self.whitestart)
         self.white_e.clicked.connect(self.whiteend)
         self.black_s.clicked.connect(self.blackstart)
@@ -83,6 +81,7 @@ class WindowClass(QMainWindow, form_class):
         self.submit_point.clicked.connect(self.progress2submit)
         self.slicebox.valueChanged.connect(self.slicenum)
         self.image_control.clicked.connect(self.imagecontrol)
+        self.delete_mask.clicked.connect(self.deletemask)
 
         #variables
         self.folder=""
@@ -109,6 +108,7 @@ class WindowClass(QMainWindow, form_class):
         watch(self.current_index, callback=self.cindex)
         self.hu=False
         self.progress5_start=False
+        self.col_label=[]
 
         #images with pixmap
         self.pixmap=QPixmap()
@@ -222,7 +222,7 @@ class WindowClass(QMainWindow, form_class):
         row=self.slicetable.rowCount()
         self.slicetable.insertRow(row)
         self.slicetable.setItem(row, 0, QTableWidgetItem(str(self.current_index)))
-        print(self.slicetable.rowCount())
+        #print(self.slicetable.rowCount())
     
     def deleteimage(self):
         if self.slicetable.currentRow()<0:
@@ -231,6 +231,16 @@ class WindowClass(QMainWindow, form_class):
         index=self.slicetable.item(row, 0).text()
         self.crop_image=list(filter(lambda x: x[1]!=int(index), self.crop_image))
         self.slicetable.removeRow(row)
+
+    def deletemask(self):
+        if self.masktable.currentRow()<0:
+            return QMessageBox.warning(self, 'Warning', 'Please select the record to delete!')
+        row=self.masktable.currentRow()
+        tup=self.masktable.item(row, self.current_index).text()
+        print(tup)
+        self.tempcrop=list(filter(lambda x: x!=tup, self.tempcrop))
+        print(self.tempcrop)
+        self.selected_image()
 
     def progress1(self):
         #disable
@@ -292,16 +302,24 @@ class WindowClass(QMainWindow, form_class):
         self.gap.setDisabled(True)   
         self.submit.setDisabled(True)  
         self.currentindex.setDisabled(True)   
+        self.next.setDisabled(True)
+        self.slider.setDisabled(True)
+        self.prev.setDisabled(True)
         #enable
         self.white_pen.setEnabled(True)
         self.shade_button.setEnabled(True)
         self.croped_result.setEnabled(True)
         self.image3d.setEnabled(True)
+        self.masktable.setEnabled(True)
+        self.delete_mask.setEnabled(True)
         #else
         self.current_index=0
         self.slider.setRange(0, len(self.crop_image)-1)
         self.selected_image()
         self.progress5_start=True
+        for i in self.crop_image:
+            col=self.masktable.columnCount()
+            self.masktable.insertColumn(col)
 
     def progress6(self):
         if self.white==True and self.shadeb==True:
@@ -334,9 +352,17 @@ class WindowClass(QMainWindow, form_class):
         image = np.uint8(image)
         height, width= image.shape
         image = np.repeat(image[..., np.newaxis], 3, -1)
+        row=self.masktable.rowCount()
+        if row<len(self.tempcrop):
+            for i in range(len(self.tempcrop)-row):
+                row=self.masktable.rowCount()
+                self.masktable.insertRow(row)
         if self.tempcrop!=[]:
+            i=0
             for tup in self.tempcrop:
                 image[tup[1]][tup[0]]=[255, 0, 0]
+                self.masktable.setItem(i, self.current_index, QTableWidgetItem(str(tup)))
+                i=i+1
         if self.mean!=[]: #fix
             for tup in self.mean:
                 image[tup[1]][tup[0]]=[0, 255, 0]
@@ -379,6 +405,8 @@ class WindowClass(QMainWindow, form_class):
             self.white=False
             self.shadeb=False
             self.croped_image_show(True, self.current_index)
+            self.current_index=self.current_index+1
+            self.selected_image()
 
     def croped_image_show(self, white, index):
         if white==True:
@@ -413,11 +441,6 @@ class WindowClass(QMainWindow, form_class):
                         newImArray[idx1][idx2]=0
             self.shade=0
             self.save_croped.append(newImArray)
-            # height, width = newImArray.shape
-            # bytes_per_line = width
-            #qimage = QImage(newImArray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
-            #pixmap=QPixmap.fromImage(qimage)
-            #self.Showcroped.setPixmap(pixmap)
             self.crop_rw.clear()
             if index+1==len(self.crop_image):
                 self.show3d()
@@ -473,20 +496,6 @@ class WindowClass(QMainWindow, form_class):
                         y.append(idx3)
                         z.append(-self.gap.value()*int(self.crop_image[idx1][0][0:5]))
         ax.scatter(x,y,z, marker='o', s=15, c='darkgreen', alpha=.25)
-        # for (element, index) in self.crop_poly:
-        #     x1=[]
-        #     y1=[]
-        #     z1=[]
-        #     for e in element:
-        #         x1.append(e[0])
-        #         y1.append(e[1])
-        #         z1.append(-index*self.gap.value())
-        #     ax=Axes3D(fig, auto_add_to_figure=False)
-        #     fig.add_axes(ax)
-        #     verts=[list(zip(x1,y1,z1))]
-        #     print(verts)
-        #     ax.add_collection3d(Poly3DCollection(verts))
-        #ax.grid(visible=None)
         ax.axis('off')
         canvas.draw()
         width, height = fig.figbbox.width, fig.figbbox.height
@@ -497,6 +506,7 @@ class WindowClass(QMainWindow, form_class):
         self.ratio.setEnabled(True)
         self.progress6()
         self.resizeimage()
+        plt.close(fig)
     
     #calculate the each volumn
     def calculate(self):
@@ -515,7 +525,7 @@ class WindowClass(QMainWindow, form_class):
         black_volume=self.dic_crop.copy()
         black_volume[self.black_start[0][1]]=(0, 0)
         black_volume[self.black_end[0][1]]=(0, 0)
-        print(white_volume, black_volume)
+        # print(white_volume, black_volume)
         self.calculate_done(white_volume, black_volume)
 
     def calculate_layer(self, grid: List[List[int]]) -> int:
