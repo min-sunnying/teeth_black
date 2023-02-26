@@ -43,20 +43,18 @@ class ImageSet:
     def __init__(self, parents):
         self.folder=""
         self.files=[]
-        self.currentindex=0
-        self.length=0
+        self.cutout=[]
+        self.current_index=0
         self.parents=parents
-        self.pixmap=QPixmap()
         self.rawData={
             'filename':[],
             'slicenum':[],
-            'canine start':[],
-            'canine end':[],
-            'cavity start':[],
-            'cavity end':[],
             'slice':[],
+            'polygon':[],
+            'shade':[]
         }
-        self.data=pd.DataFrame(self.rawData)
+
+        watch(self.current_index, callback=self.setImageIndex)
 
     def selectfolder(self):
         options = QFileDialog.Options()
@@ -64,17 +62,84 @@ class ImageSet:
         self.folder = QFileDialog.getExistingDirectory(self.parents, "Select Folder", options=options)
         self.files = [f for f in os.listdir(self.folder) if f.endswith(".dcm")]
         self.files = sorted(self.files)
-        self.data['filename']=self.files
+        self.rawData['filename']=self.files
         self.length=len(self.files)
+        for i in range(self.length):
+            self.rawData['slicenum'].append(int(self.files[i][0:5]))
+            self.rawData['slice'].append(False)
+            self.rawData['polygon'].append([])
+            self.rawData['shade'].append([])
+        self.data=pd.DataFrame(self.rawData)
+        print(self.data)
+        self.setSliderRange()
         
-    
+    def gapchange(self):
+        pass
+
     def setSliderRange(self):
-        self.parents.slider.setRange(1, self.length)
+        self.current_index=1
+        self.parents.slider.setRange(1, self.length+1)
     
     def setImageIndex(self, frame, elem, exeinfo):
-        self.parents.slider.setValue(self.current_index)
+        self.row_index=self.current_index-1
+        self.parents.slider.setValue(int(self.data['slicenum'][self.row_index]))
         self.parents.currentindex.clear()
         self.parents.currentindex.append(str(self.current_index))
+
+    #save the starting and ending points of teeth
+    def whitestart(self):
+        self.parents.whitestartbox.setValue(self.current_index)
+    
+    def whiteend(self):
+        self.parents.whiteendbox.setValue(self.current_index)
+
+    def blackstart(self):
+        self.parents.blackstartbox.setValue(self.current_index)
+
+    def blackend(self):
+        self.parents.blackendbox.setValue(self.current_index)
+    
+    def submit2next(self):
+        if self.parents.whitestartbox.value()!=0 and self.parents.whiteendbox.value()!=0 and self.parents.blackstartbox.value()!=0 and self.parents.blackendbox.value()!=0 and len(self.cutout)==2:
+            self.canine_start=self.parents.whitestartbox.value()
+            self.canine_end= self.parents.whiteendbox.value()
+            self.cavity_start=self.parents.blackstartbox.value()
+            self.cavity_end=self.parents.blackendbox.value()
+            self.uichange()
+            self.maskset()
+        else:
+            return QMessageBox.warning(self.parents, 'Warning', 'Please set proper values.')
+    
+    def uichange(self):
+        self.parents.add_slice.setEnabled(True)
+        self.parents.delete_slice.setEnabled(True)
+        self.parents.red_mask.setEnabled(True)
+        self.parents.blue_shade.setEnabled(True)
+        self.parents.masktable.setEnabled(True)
+        self.parents.caninevolume.setEnabled(True)
+        self.parents.cavityvolume.setEnabled(True)
+        self.parents.volumeratio.setEnabled(True)
+        self.parents.resultcanine.setEnabled(True)
+        self.parents.resultcavity.setEnabled(True)
+        self.parents.resultratio.setEnabled(True)
+
+        self.parents.white_s.setDisabled(True)
+        self.parents.white_e.setDisabled(True)
+        self.parents.black_s.setDisabled(True)
+        self.parents.black_e.setDisabled(True)
+        self.parents.whitestartbox.setDisabled(True)
+        self.parents.whiteendbox.setDisabled(True)
+        self.parents.blackstartbox.setDisabled(True)
+        self.parents.blackendbox.setDisabled(True)
+        self.parents.submit.setDisabled(True)
+        self.parents.cutout.setDisabled(True)
+
+    def maskset(self):
+        self.data=self.data.loc[self.parents.whitestartbox.value():self.parents.whiteendbox.value()]
+        self.length=len(self.data['slicenum'])
+        self.current_index=int(self.data['slicenum'][1])
+
+        
 
 class ImageControl(ImageSet):
     def __init__(self, parents):
@@ -82,20 +147,27 @@ class ImageControl(ImageSet):
         self.hu=False
         self.scale=0.5
     
-    def transform_to_hu(self, image, level, window):
-        max=level+window/2
-        min=level-window/2
-        image=image.clip(min, max)
-        return image
+    def transform_to_hu(self, image):
+        if self.hu==True:
+            level=400
+            window=1800
+            max=level+window/2
+            min=level-window/2
+            image=image.clip(min, max)
+            return image
+        else:
+            return image
 
     def setScale(self):
         return self.scale
     
     def zoomin(self):
         self.scale*=1.5
+        self.resizeimage()
     
     def zoomout(self):
         self.scale=0.5
+        self.resizeimage()
 
     def resizeimage(self):
         size = self.pixmap.size()
@@ -104,10 +176,9 @@ class ImageControl(ImageSet):
         self.parents.imageshow.resize(self.scale*size)
     
     def imagecall(self):
-        file_path = os.path.join(self.folder, self.data['filename'][self.currentindex])
+        file_path = os.path.join(self.folder, self.data['filename'][self.current_index-1])
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
-                #HU
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
         height, width= image.shape
@@ -117,6 +188,9 @@ class ImageControl(ImageSet):
         image = np.uint8(image)
         height, width= image.shape
         image = np.repeat(image[..., np.newaxis], 3, -1)
+                #HU
+        image = self.transform_to_hu(image)
+                #HU
         return image
 
     def imageshow(self, image):
@@ -127,39 +201,24 @@ class ImageControl(ImageSet):
         self.parents.imageshow.setPixmap(self.pixmap)
         self.resizeimage()
 
-    def cropingimage(self, white, index):
-        if white==True:
-            file_path = os.path.join(self.folder, self.crop_image[index][0])
-            dicom_data = pydicom.dcmread(file_path)
-            image = dicom_data.pixel_array.astype(float)
-            image = (np.maximum(image,0)/image.max())*255
-            image = np.uint8(image)
-            height, width= image.shape
-            image = Image.fromarray(image)
-            image = image.resize((height*2, width*2), Image.BICUBIC)
-            image = np.array(image)
-            image = np.uint8(image)
-            height, width= image.shape
-            maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
-            ImageDraw.Draw(maskIm).polygon(self.crop_rw[0], outline=1, fill=1)
-            mask=np.array(maskIm)
-            newImArray=np.empty(image.shape, dtype='uint8')
-            newImArray[:, :]=image[:, :]
-            newImArray[:,:]=mask*newImArray[:, :]
-            #add shade
-            for m in self.mean:
-                self.shade+=newImArray[m[1]][m[0]]
-            self.shade/=len(self.mean)
-            self.shade=int(self.shade)
-            self.mean=[]
-            for idx1, e1 in enumerate(newImArray):
-                for idx2, e2 in enumerate(e1):
-                    if e2<=self.shade:
-                        newImArray[idx1][idx2]=1
-                    else:
-                        newImArray[idx1][idx2]=0
-            self.shade=0
-            self.save_croped.append(newImArray)
-            self.crop_rw.clear()
-            if index+1==len(self.crop_image):
-                self.show3d()
+    def cropingimage(self):
+        image=self.imagecall()
+        maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
+        ImageDraw.Draw(maskIm).polygon(self.data['polygon'][self.current_index], outline=1, fill=1)
+        mask=np.array(maskIm)
+        newImArray=np.empty(image.shape, dtype='uint8')
+        newImArray[:, :]=image[:, :]
+        newImArray[:,:]=mask*newImArray[:, :]
+        #add shade
+        shade=0
+        for m in self.data['shade'][self.current_index]:
+            shade+=newImArray[m[1]][m[0]]
+        shade/=len(self.data['shade'][self.current_index])
+        shade=int(shade)
+        for idx1, e1 in enumerate(newImArray):
+            for idx2, e2 in enumerate(e1):
+                if e2<=self.shade:
+                    newImArray[idx1][idx2]=1
+                else:
+                    newImArray[idx1][idx2]=0
+        self.data['shade'][self.current_index]=newImArray

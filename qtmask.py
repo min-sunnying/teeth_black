@@ -21,40 +21,62 @@ from PyQt5.QtGui import QImage, QPixmap
 import qtback as back
 
 
-class NoMaskImage:
+class MaskImage:
     def __init__(self, parents):
         self.ic=back.ImageControl(parents)
-        self.mask=False
 
     def nextImage(self):
-        if self.length!=self.currentindex:
-            self.currentindex+=1
-            self.imageLoad()
+        if self.ic.length!=self.ic.current_index:
+            self.ic.current_index+=1
+            if self.ic.parents.maskstatus==False:
+                self.imageLoad_nomask()
+            else:
+                self.imageLoad_mask()
     
     def prevImage(self):
-        if self.currentindex!=1:
-            self.currentindex-=1
-            self.imageLoad()
+        if self.ic.current_index!=1:
+            self.ic.current_index-=1
+            if self.ic.parents.maskstatus==False:
+                self.imageLoad_nomask()
+            else:
+                self.imageLoad_mask()
 
     def changeSliderValue(self):
-        self.currentindex=self.slider.value()
-        self.imageLoad()
+        self.ic.current_index=self.ic.parents.slider.value()
+        if self.ic.parents.maskstatus==False:
+            self.imageLoad_nomask()
+        else:
+            self.imageLoad_mask()
 
     def imageLoad_nomask(self):
         image=self.ic.imagecall()
-        #Mask, Shade
-        #not rgb image
         self.ic.imageshow(image)
 
     def imageLoad_mask(self):
         image=self.ic.imagecall()
-        if self.tempcrop!=[]:
-            i=0
-            for tup in self.tempcrop:
-                image[tup[1]][tup[0]]=[255, 0, 0]
-                self.masktable.setItem(i, self.current_index, QTableWidgetItem(str(tup)))
-                i=i+1
-        if self.mean!=[]: #fix
-            for tup in self.mean:
-                image[tup[1]][tup[0]]=[0, 255, 0]
+        for tup in self.ic.data['polygon'][self.ic.current_index-1]:
+            image[tup[1]][tup[0]]=[255, 0, 0]
+        for tup in self.ic.data['shade'][self.ic.current_index-1]:
+            image[tup[1]][tup[0]]=[0, 255, 0]
+        image=image[self.ic.cutout[0][0]:self.ic.cutout[1][0]][self.ic.cutout[0][1]:self.ic.cutout[1][1]]
         self.ic.imageshow(image)
+    
+    def cutoutdraw(self, posx, posy):
+        image=self.ic.imagecall()
+        self.ic.cutout.append((posx, posy))
+        print(self.ic.cutout)
+        for tup in self.ic.cutout:
+            image[tup[1], tup[0]]=[0, 0, 255]
+        self.ic.imageshow(image)
+
+    def updatechart(self):
+        datatrue=self.ic.data.loc[self.ic.data['slice']==True]
+        
+        pass
+
+    def tabledoubleclickchange(self):
+        row=self.slicetable.currentRow()
+        index=int(self.slicetable.item(row, 0).text())
+        self.current_index=index
+        self.slider.setValue(self.current_index)
+        self.update_image()
