@@ -43,7 +43,7 @@ class ImageSet:
     def __init__(self, parents):
         self.folder=""
         self.files=[]
-        self.cutout=[]
+        self.cutout=(0, 0)
         self.current_index=0
         self.parents=parents
         self.rawData={
@@ -70,7 +70,6 @@ class ImageSet:
             self.rawData['polygon'].append([])
             self.rawData['shade'].append([])
         self.data=pd.DataFrame(self.rawData)
-        print(self.data)
         self.setSliderRange()
         
     def gapchange(self):
@@ -78,7 +77,7 @@ class ImageSet:
 
     def setSliderRange(self):
         self.current_index=1
-        self.parents.slider.setRange(1, self.length+1)
+        self.parents.slider.setRange(1, self.length)
     
     def setImageIndex(self, frame, elem, exeinfo):
         self.row_index=self.current_index-1
@@ -105,8 +104,8 @@ class ImageSet:
             self.canine_end= self.parents.whiteendbox.value()
             self.cavity_start=self.parents.blackstartbox.value()
             self.cavity_end=self.parents.blackendbox.value()
+            self.parents.maskstatus=True
             self.uichange()
-            self.maskset()
         else:
             return QMessageBox.warning(self.parents, 'Warning', 'Please set proper values.')
     
@@ -122,6 +121,8 @@ class ImageSet:
         self.parents.resultcanine.setEnabled(True)
         self.parents.resultcavity.setEnabled(True)
         self.parents.resultratio.setEnabled(True)
+        self.parents.wide3dshow.setEnabled(True)
+        self.parents.select3dshow.setEnabled(True)
 
         self.parents.white_s.setDisabled(True)
         self.parents.white_e.setDisabled(True)
@@ -134,11 +135,6 @@ class ImageSet:
         self.parents.submit.setDisabled(True)
         self.parents.cutout.setDisabled(True)
 
-    def maskset(self):
-        self.data=self.data.loc[self.parents.whitestartbox.value():self.parents.whiteendbox.value()]
-        self.length=len(self.data['slicenum'])
-        self.current_index=int(self.data['slicenum'][1])
-
         
 
 class ImageControl(ImageSet):
@@ -146,6 +142,7 @@ class ImageControl(ImageSet):
         super().__init__(parents)
         self.hu=False
         self.scale=0.5
+        self.defaultscale=0.5
     
     def transform_to_hu(self, image):
         if self.hu==True:
@@ -166,7 +163,7 @@ class ImageControl(ImageSet):
         self.resizeimage()
     
     def zoomout(self):
-        self.scale=0.5
+        self.scale=self.defaultscale
         self.resizeimage()
 
     def resizeimage(self):
@@ -175,50 +172,33 @@ class ImageControl(ImageSet):
         self.parents.transparent.resize(self.scale*size)
         self.parents.imageshow.resize(self.scale*size)
     
-    def imagecall(self):
-        file_path = os.path.join(self.folder, self.data['filename'][self.current_index-1])
+    def image_call(self):
+        file_path = os.path.join(self.folder, self.data['filename'][self.row_index])
         dicom_data = pydicom.dcmread(file_path)
         image = dicom_data.pixel_array.astype(float)
+                #HU
+        image = self.transform_to_hu(image)
+                #HU
         image = (np.maximum(image,0)/image.max())*255
         image = np.uint8(image)
         height, width= image.shape
         image = Image.fromarray(image)
         image = image.resize((height*2, width*2), Image.BICUBIC)
         image = np.array(image)
-        image = np.uint8(image)
         height, width= image.shape
+        x1=int(self.cutout[0])
+        x2=int(x1+height/(2*self.scale))
+        y1=int(self.cutout[1])
+        y2=int(x2-x1+y1)
+        # image=image[ y1:y2, x1:x2]
+        image = np.uint8(image)
         image = np.repeat(image[..., np.newaxis], 3, -1)
-                #HU
-        image = self.transform_to_hu(image)
-                #HU
         return image
 
-    def imageshow(self, image):
+    def image_show(self, image):
         height, width, rgb = image.shape
         bytes_per_line = width*3
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
         self.pixmap=QPixmap.fromImage(qimage)
         self.parents.imageshow.setPixmap(self.pixmap)
         self.resizeimage()
-
-    def cropingimage(self):
-        image=self.imagecall()
-        maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
-        ImageDraw.Draw(maskIm).polygon(self.data['polygon'][self.current_index], outline=1, fill=1)
-        mask=np.array(maskIm)
-        newImArray=np.empty(image.shape, dtype='uint8')
-        newImArray[:, :]=image[:, :]
-        newImArray[:,:]=mask*newImArray[:, :]
-        #add shade
-        shade=0
-        for m in self.data['shade'][self.current_index]:
-            shade+=newImArray[m[1]][m[0]]
-        shade/=len(self.data['shade'][self.current_index])
-        shade=int(shade)
-        for idx1, e1 in enumerate(newImArray):
-            for idx2, e2 in enumerate(e1):
-                if e2<=self.shade:
-                    newImArray[idx1][idx2]=1
-                else:
-                    newImArray[idx1][idx2]=0
-        self.data['shade'][self.current_index]=newImArray

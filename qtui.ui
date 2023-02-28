@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Teeth Calculator</string>
+   <string>Age Estimation from Dental Cavity Index</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="verticalLayoutWidget">
@@ -28,6 +28,12 @@
       <widget class="QSlider" name="slider">
        <property name="enabled">
         <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -75,8 +81,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>181</width>
-            <height>31</height>
+            <width>171</width>
+            <height>71</height>
            </rect>
           </property>
          </widget>
@@ -97,7 +103,7 @@
      <item>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="1" column="0">
-        <widget class="QPushButton" name="black_s">
+        <widget class="QPushButton" name="blackstart">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -107,7 +113,7 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QPushButton" name="white_e">
+        <widget class="QPushButton" name="whiteend">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -117,7 +123,7 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QPushButton" name="black_e">
+        <widget class="QPushButton" name="blackend">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -143,7 +149,7 @@
         </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QPushButton" name="white_s">
+        <widget class="QPushButton" name="whitestart">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -202,21 +208,11 @@
        </item>
       </layout>
      </item>
-     <item>
-      <widget class="QPushButton" name="submit">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Submit</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </widget>
    <widget class="QPushButton" name="ratio">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -232,14 +228,14 @@
    </widget>
    <widget class="QTableWidget" name="masktable">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
       <x>540</x>
-      <y>420</y>
+      <y>350</y>
       <width>541</width>
-      <height>211</height>
+      <height>281</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -267,7 +263,7 @@
      <bool>false</bool>
     </attribute>
     <attribute name="verticalHeaderStretchLastSection">
-     <bool>true</bool>
+     <bool>false</bool>
     </attribute>
     <column>
      <property name="text">
@@ -285,16 +281,16 @@
      </property>
     </column>
    </widget>
-   <widget class="QLabel" name="image3d">
+   <widget class="QLabel" name="slice3d">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>540</x>
+      <x>820</x>
       <y>60</y>
-      <width>541</width>
-      <height>351</height>
+      <width>261</width>
+      <height>241</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -304,7 +300,7 @@
      </sizepolicy>
     </property>
     <property name="text">
-     <string>3D Image</string>
+     <string>Selected 3D Image</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -313,9 +309,9 @@
    <widget class="QWidget" name="gridLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>570</x>
+      <x>530</x>
       <y>10</y>
-      <width>511</width>
+      <width>551</width>
       <height>31</height>
      </rect>
     </property>
@@ -327,9 +323,9 @@
       <number>0</number>
      </property>
      <item row="0" column="3">
-      <widget class="QPushButton" name="blue_shade">
+      <widget class="QPushButton" name="blueshade">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Shade</string>
@@ -337,9 +333,9 @@
       </widget>
      </item>
      <item row="0" column="2">
-      <widget class="QPushButton" name="red_mask">
+      <widget class="QPushButton" name="redmask">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Mask</string>
@@ -347,9 +343,9 @@
       </widget>
      </item>
      <item row="0" column="0">
-      <widget class="QPushButton" name="add_slice">
+      <widget class="QPushButton" name="addslice">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Add Slice</string>
@@ -357,9 +353,9 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QPushButton" name="delete_slice">
+      <widget class="QPushButton" name="deleteslice">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Delete Slice</string>
@@ -373,20 +369,13 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>549</width>
+      <width>511</width>
       <height>31</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="cutout">
-       <property name="text">
-        <string>Cut Out</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="image_control">
+      <widget class="QPushButton" name="imagecontrol">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -472,6 +461,12 @@
         <height>512</height>
        </rect>
       </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="mouseTracking">
        <bool>true</bool>
       </property>
@@ -486,6 +481,9 @@
       </property>
      </widget>
      <widget class="QLabel" name="transparent">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -511,7 +509,7 @@
    </widget>
    <widget class="QTextBrowser" name="resultratio">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -530,7 +528,7 @@
    </widget>
    <widget class="QTextBrowser" name="resultcavity">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -549,7 +547,7 @@
    </widget>
    <widget class="QLabel" name="cavityvolume">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -565,7 +563,7 @@
    </widget>
    <widget class="QLabel" name="caninevolume">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -581,7 +579,7 @@
    </widget>
    <widget class="QTextBrowser" name="resultcanine">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -600,7 +598,7 @@
    </widget>
    <widget class="QLabel" name="volumeratio">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -613,6 +611,63 @@
     <property name="text">
      <string>Volume Ratio    :</string>
     </property>
+   </widget>
+   <widget class="QLabel" name="wide3d">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>60</y>
+      <width>261</width>
+      <height>241</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="text">
+     <string>Wide 3D Image</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>310</y>
+      <width>541</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="wide3dshow">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Show Wide 3D Image</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="select3dshow">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Show Selected 3D Image</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -628,7 +683,7 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="select_folder"/>
+    <addaction name="selectfolder"/>
    </widget>
    <widget class="QMenu" name="menuSetting">
     <property name="title">
@@ -641,7 +696,7 @@
    <addaction name="menuSetting"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="select_folder">
+  <action name="selectfolder">
    <property name="text">
     <string>Select Folder</string>
    </property>

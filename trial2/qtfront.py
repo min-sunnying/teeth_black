@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import QFileDialog, QLabel
 from PyQt5.QtGui import QImage, QPixmap
 import qtback as back
 import qtmask as qmask
+import qt3d as q3d
 
 form_class = uic.loadUiType("./qtui.ui")[0]
 
@@ -46,15 +47,28 @@ class WindowClass(QMainWindow, form_class):
         self.zoomout.clicked.connect(self.image.ic.zoomout)
         self.image_control.clicked.connect(self.imagehu)
         self.gap.triggered.connect(self.image.ic.gapchange)
+        self.add_slice.clicked.connect(self.image.addslice)
+        self.imageshow.setScaledContents(True)
+        self.masktable.doubleClicked.connect(self.image.tabledoubleclickchange)
+        self.delete_slice.clicked.connect(self.image.deleteimage)
+
         self.cutout.clicked.connect(self.cutoutdraw)
-        self.red_mask.clicked.connect(self.cutoutdraw)
-        self.blue_shade.clicked.connect(self.cutoutdraw)
+        self.red_mask.clicked.connect(self.polygondraw)
+        self.blue_shade.clicked.connect(self.shadedraw)
+        self.cutout.setCheckable(True)
+        self.red_mask.setCheckable(True)
+        self.blue_shade.setCheckable(True)
+        self.cutout.setAutoExclusive(True)
+        self.red_mask.setAutoExclusive(True)
+        self.blue_shade.setAutoExclusive(True)
+
+        self.wide3dshow.clicked.connect(self.getwide3d)
+        self.select3dshow.clicked.connect(self.getslice3d)
+        self.image3d.setScaledContents(True)
+        self.full3d.setScaledContents(True)
 
         #status
         self.maskstatus=False
-        self.cutoutpen=False
-        self.polypen=False
-        self.shadepen=False
     
         # mouse tracking
         tracker = back.MouseTracker(self.transparent)
@@ -70,25 +84,19 @@ class WindowClass(QMainWindow, form_class):
         delta = QtCore.QPoint(30, -15)
         self.label_position.show()
         self.label_position.move(pos + delta)
-        if self.maskstatus==False:
-            self.position_nomask(pos, scale)
-        else:
-            self.position_mask(pos, scale)
+        self.position(pos, scale)
     
     def mousePressEvent(self, e):
-        if self.cutoutpen==True:
+        if self.cutout.isChecked()==True and len(self.image.ic.cutout)<1:
             self.image.cutoutdraw(int(self.posx), int(self.posy))
-        if self.polypen==True:
-            pass
-        pass
+        else:
+            self.cutout.setDisabled(True)
+        if self.red_mask.isChecked()==True:
+            self.image.savemask(int(self.posx), int(self.posy))
+        if self.blue_shade.isChecked()==True:
+            self.image.saveshade(int(self.posx), int(self.posy))
     
-    def position_nomask(self, pos, scale):
-        self.label_position.setText("(%d, %d)" % (pos.x()/scale, pos.y()/scale))
-        self.label_position.adjustSize()
-        self.posx=pos.x()/scale
-        self.posy=pos.y()/scale
-    
-    def positon_mask(self, pos, scale):
+    def position(self, pos, scale):
         self.label_position.setText("(%d, %d)" % (pos.x()/scale, pos.y()/scale))
         self.label_position.adjustSize()
         self.posx=pos.x()/scale
@@ -112,19 +120,39 @@ class WindowClass(QMainWindow, form_class):
             self.image.imageLoad_mask()
     
     def cutoutdraw(self):
-        if self.cutout.isChecked==False:
-            self.cutoutpen=True
-            self.cutout.setCheckable(True)
-        elif self.red_mask.isChecked==False:
+        if self.cutout.isChecked()==True:
+            #self.cutout.setChecked(True)
             pass
+        else:
+            self.cutout.setChecked(False)
     
     def polygondraw(self):
-        self.polypen=True
-        self.red_mask.setCheckable(True)
+        if self.red_mask.isChecked()==True:
+            self.red_mask.setChecked(True)
+        else:
+            self.red_mask.setChecked(False)
     
     def shadedraw(self):
-        self.shadepen=True
-        self.blue_shade.setCheckable(True)
+        if self.blue_shade.isChecked()==True:
+            self.blue_shade.setChecked(True)
+        else:
+            self.blue_shade.setChecked(False)
+    
+    def getslicedatareturn(self):
+        data=self.image.setslicedatareturn()
+        return data
+
+    def getslice3d(self):
+        data=self.getslicedatareturn()
+        id=q3d.Show3d(data, self, self.image.ic.folder)
+        id.cropingimage()
+        id.show3d()
+    
+    def getwide3d(self):
+        data=self.image.ic.data
+        id=q3d.Show3d(data, self, self.image.ic.folder)
+        id.cropingimage()
+        id.show3d()
 
     
 

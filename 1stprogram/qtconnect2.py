@@ -111,7 +111,7 @@ class WindowClass(QMainWindow, form_class):
         self.col_label=[]
 
         #images with pixmap
-        self.pixmap=QPixmap()
+        #self.pixmap=QPixmap()
 
         # mouse tracking
         tracker = MouseTracker(self.transparent)
