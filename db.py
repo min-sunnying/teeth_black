@@ -96,4 +96,4 @@ class Data:
         return self.gap
     
     def get_wide_data(self):
-        return self.data.iloc[:, self.canine_start:self.canine_end]
+        return self.data.iloc[self.canine_start:self.canine_end, :]

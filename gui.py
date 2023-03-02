@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 import PyQt5.QtCore as QtCore
 from PIL import Image, ImageDraw 
 from PyQt5.QtCore import Qt, QThread
-from PyQt5 import uic
+from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
 from PyQt5.QtWidgets import QFileDialog, QLabel
 from PyQt5.QtGui import QImage, QPixmap
@@ -40,7 +40,8 @@ class MouseTracker(QtCore.QObject):
         return super().eventFilter(o, e)
 
 #main window class
-class WindowClass(QMainWindow, form_class):    
+class WindowClass(QMainWindow, form_class):  
+    EXIT_CODE_REBOOT=-123123  
     def __init__(
             self, 
             select_folder_click,
@@ -64,6 +65,9 @@ class WindowClass(QMainWindow, form_class):
             shade_point_draw,
             plot_slice_image,
             plot_wide_image,
+            calculate,
+            table_doubleclick_change,
+            table_delete_row
         ):
         super().__init__()
         #function callback
@@ -88,6 +92,9 @@ class WindowClass(QMainWindow, form_class):
         self.shade_point_draw=shade_point_draw
         self.plot_slice_image=plot_slice_image
         self.plot_wide_image=plot_wide_image
+        self.calculate=calculate
+        self.table_doubleclick_change=table_doubleclick_change
+        self.table_delete_row=table_delete_row
 
         #UI initiation
         self.setupUi(self)
@@ -98,6 +105,7 @@ class WindowClass(QMainWindow, form_class):
                         #UI connection
         #menu bar triggering
         self.selectfolder.triggered.connect(self.select_folder_click)
+        self.reset.triggered.connect(self.restart_all)
 
         #button background environment
         self.imageshow.setScaledContents(True)
@@ -120,12 +128,16 @@ class WindowClass(QMainWindow, form_class):
         self.addslice.clicked.connect(self.set_slice)
         self.select3dshow.clicked.connect(self.plot_slice_image)
         self.wide3dshow.clicked.connect(self.plot_wide_image)
+        self.ratio.clicked.connect(self.calculate)
+        self.masktable.doubleClicked.connect(self.table_doubleclick_change)
+        self.deleteslice.clicked.connect(self.table_delete_row)
         
         #other
         self.mouse_tracking()
         self.pixmap=QPixmap()
 
-
+    def restart_all(self):
+        QtGui.QGuiApplication.exit( WindowClass.EXIT_CODE_REBOOT )
 
     def mouse_tracking(self):
         tracker = MouseTracker(self.transparent)
@@ -145,6 +157,15 @@ class WindowClass(QMainWindow, form_class):
         self.posx=pos.x()/scale
         self.posy=pos.y()/scale
     
+    def current_row(self):
+        row=self.masktable.currentRow()
+        if row<0:
+            return QMessageBox.warning(self, 'Warning', 'Please select the record!')
+        index=int(self.masktable.item(row, 0).text())-1
+        return index
+    def remove_row(self):
+        row=self.masktable.currentRow()
+        self.masktable.removeRow(row)
 
     
     def resize_image(self):
@@ -186,7 +207,7 @@ class WindowClass(QMainWindow, form_class):
         index=self.get_index()
         self.set_cavity_end()
         self.blackendbox.setValue(index+1)    
-    
+
 
     def update_table(self):
         data=self.get_slice_data()
@@ -220,20 +241,7 @@ class WindowClass(QMainWindow, form_class):
         else:
             self.blueshade.setChecked(False)
 
-
-
-
-
-class ThreeDWide(QThread):
-    def __init__(self, parents):
-        super.__init__(parents)
-    
-    def run(self):
-        pass
-
-class ThreeDSlice(QThread):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-    def run(self):
-        pass
+    def show_result(self, w, b, r):
+        self.resultcanine.append(str(w))
+        self.resultcavity.append(str(b))
+        self.resultratio.append(str(r))

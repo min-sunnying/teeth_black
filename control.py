@@ -48,6 +48,9 @@ class Control:
             self.shade_point_draw,
             self.plot_slice_image,
             self.plot_wide_image,
+            self.calculate,
+            self.table_doubleclick_change,
+            self.table_delete_row
         )
         self.init_variables()
         
@@ -56,7 +59,9 @@ class Control:
         self.scale=0.5
         self.index=0
         self.hu=False
-        self.imagearray=[]
+        self.slice=[]
+        self.wide=[]
+        self.dic_crop={}
 
     def select_folder_click(self):
         options = QFileDialog.Options()
@@ -159,18 +164,30 @@ class Control:
     def shade_point_draw(self, tup):
         self.model.set_shade(self.index, tup)
 
-    
-
+    def table_doubleclick_change(self):
+        i=self.view.current_row()
+        self.index=i
+        self.view.set_pixmap_image()
+    def table_delete_row(self):
+        i=self.view.current_row()
+        self.model.set_slice_tf(i, False)
+        self.model.data['polygon'][i]=[]
+        self.model.data['shade'][i]=[]
+        self.view.remove_row()
+        self.view.set_pixmap_image()
+        
 
     def plot_slice_image(self):
+        self.slice=[]
         data=self.model.get_slice_data()
-        self.croping_image(data)
+        self.croping_image(data, 's')
         self.make_3d_plot('s')
     def plot_wide_image(self):
+        self.wide=[]
         data=self.model.get_wide_data()
-        self.croping_image(data)
+        self.croping_image(data, 'w')
         self.make_3d_plot('w')
-    def croping_image(self, data):
+    def croping_image(self, data, str):
         for i, d in data.iterrows():
             file_path = os.path.join(self.model.get_folder(), self.model.get_filename(i))
             dicom_data = pydicom.dcmread(file_path)
@@ -184,26 +201,36 @@ class Control:
             image = np.uint8(image)
             height, width= image.shape
             maskIm =Image.new('L', (image.shape[1], image.shape[0]), 0)
-            if data['polygon'][i]!=[]:
+
+            if len(d['polygon'])!=0:
                 ImageDraw.Draw(maskIm).polygon(data['polygon'][i], outline=1, fill=1)
-            mask=np.array(maskIm)
-            newImArray=np.empty(image.shape, dtype='uint8')
-            newImArray[:, :]=image[:, :]
-            newImArray[:,:]=mask*newImArray[:, :]
+                mask=np.array(maskIm)
+                newImArray=np.empty(image.shape, dtype='uint8')
+                newImArray[:, :]=image[:, :]
+                newImArray[:,:]=mask*newImArray[:, :]
+            else:
+                newImArray=np.array(image)
+
             #add shade
-            shade=0
-            if data['shade'][i]!=[]:
+            if len(d['shade'])!=0:
+                shade=0
                 for m in data['shade'][i]:
                     shade+=newImArray[m[1]][m[0]]
                 shade/=len(data['shade'][i])
-            shade=int(shade)
+                shade=int(shade)
+            else:
+                shade=100
+
             for idx1, e1 in enumerate(newImArray):
                 for idx2, e2 in enumerate(e1):
                     if e2<=shade:
                         newImArray[idx1][idx2]=1
                     else:
                         newImArray[idx1][idx2]=0
-            self.imagearray.append((i, newImArray))
+            if str=='s':
+                self.slice.append((int(d['slicenum']), newImArray))
+            else:
+                self.wide.append((int(d['slicenum']), newImArray))
     def make_3d_plot(self, str):
         fig = plt.figure()
         canvas = FigureCanvas(fig)
@@ -211,7 +238,11 @@ class Control:
         x=[]
         y=[]
         z=[]
-        for e in self.imagearray:
+        if str=='s':
+            imagearray=self.slice
+        else:
+            imagearray=self.wide
+        for e in imagearray:
             for idx1, e1 in enumerate(e[1]):
                 for idx2, e2 in enumerate(e1):
                     if e2==0:
@@ -224,6 +255,7 @@ class Control:
         width, height = fig.figbbox.width, fig.figbbox.height
         qimage = QImage(canvas.buffer_rgba(), width, height, QImage.Format_ARGB32)
         pixmap=QPixmap(qimage)
+        pixmap=pixmap.scaled(241, 241)
         if str=='s':
             self.view.slice3d.setPixmap(pixmap)
         else:
@@ -231,8 +263,100 @@ class Control:
         plt.close(fig)
 
 
+    def calculate(self):
+        for idx, e in enumerate(self.slice):
+            e0=e[0]
+            e1=e[1]
+            outside_result=self.calculate_layer(np.array(e1).tolist())
+            inside_result=e1.shape[0]*e1.shape[1]-outside_result
+            all1s = np.count_nonzero(e==1)
+            white_space=e1.shape[0]*e1.shape[1]-all1s
+            black_space=inside_result-white_space
+            slicenum=e0
+            self.dic_crop[slicenum]=(inside_result, black_space)
+        white_volume=self.dic_crop.copy()
+        white_volume[self.model.canine_start]=(0, 0)
+        white_volume[self.model.canine_end]=(0, 0)
+        black_volume=self.dic_crop.copy()
+        black_volume[self.model.cavity_start]=(0, 0)
+        black_volume[self.model.cavity_end]=(0, 0)
+        self.calculate_done(white_volume, black_volume)
+    def calculate_layer(self, grid: List[List[int]]) -> int:
+        m = len(grid)
+        n = len(grid[0])
+
+        # creating a queue that will help in bfs traversal
+        q = deque()
+        area = 0
+        ans = 0
+        for i in range(m):
+            for j in range(n):
+                # if the value at any particular cell is 1 then
+                # from here we need to do the BFS traversal
+                if grid[i][j] == 1:
+                    ans = 0
+                    # pushing the pair(i,j) in the queue
+                    q.append((i, j))
+                    # marking the value 1 to -1 so that we
+                    # don't again push this cell in the queue
+                    grid[i][j] = -1
+                    while len(q) > 0:
+                        t = q.popleft()
+                        ans += 1
+                        x, y = t[0], t[1]
+                        # now we will check in all 8 directions
+                        if x + 1 < m:
+                            if grid[x + 1][y] == 1:
+                                q.append((x + 1, y))
+                                grid[x + 1][y] = -1
+                        if x - 1 >= 0:
+                            if grid[x - 1][y] == 1:
+                                q.append((x - 1, y))
+                                grid[x - 1][y] = -1
+                        if y + 1 < n:
+                            if grid[x][y + 1] == 1:
+                                q.append((x, y + 1))
+                                grid[x][y + 1] = -1
+                        if y - 1 >= 0:
+                            if grid[x][y - 1] == 1:
+                                q.append((x, y - 1))
+                                grid[x][y - 1] = -1
+                        if x + 1 < m and y + 1 < n:
+                            if grid[x + 1][y + 1] == 1:
+                                q.append((x + 1, y + 1))
+                                grid[x + 1][y + 1] = -1
+                        if x - 1 >= 0 and y + 1 < n:
+                            if grid[x - 1][y + 1] == 1:
+                                q.append((x - 1, y + 1))
+                                grid[x - 1][y + 1] = -1
+                        if x - 1 >= 0 and y - 1 >= 0:
+                            if grid[x - 1][y - 1] == 1:
+                                q.append((x - 1, y - 1))
+                                grid[x - 1][y - 1] = -1
+                        if x + 1 < m and y - 1 >= 0:
+                            if grid[x + 1][y - 1] == 1:
+                                q.append((x + 1, y - 1))
+                                grid[x + 1][y - 1] = -1
+                    area = max(area, ans)
+        return area
+    def calculate_done(self, w, b):
+        gap=self.model.get_gap()
+        white_volume=0
+        black_volume=0
+        for key in iter(sorted(w.keys())):
+            white_volume+=(key-next(iter(sorted(w.keys()))))*gap/3*(w[key][0]+w[next(iter(sorted(w.keys())))][0]+(w[key][0]*w[next(iter(sorted(w.keys())))][0])**(1/2))
+        for key in iter(sorted(b.keys())):
+            black_volume+=(key-next(iter(sorted(b.keys()))))*gap/3*(b[key][1]+b[next(iter(sorted(b.keys())))][1]+(b[key][1]*b[next(iter(sorted(b.keys())))][1])**(1/2))
+        if (abs(white_volume)-abs(black_volume))==0:
+            self.dic_crop={}
+            return
+        self.view.show_result(abs(white_volume), abs(black_volume), abs(black_volume)/(abs(white_volume)-abs(black_volume)))
+
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    c=Control()
-    c.view.show()
-    app.exec_()
+    exitcode=ui.WindowClass.EXIT_CODE_REBOOT
+    while exitcode==ui.WindowClass.EXIT_CODE_REBOOT:
+        app = QApplication(sys.argv)
+        c=Control()
+        c.view.show()
+        exitcode=app.exec_()
+        app=None
