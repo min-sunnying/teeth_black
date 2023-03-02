@@ -15,10 +15,11 @@ from PIL import Image, ImageDraw
 from PyQt5.QtCore import Qt, QThread
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
-from PyQt5.QtWidgets import QFileDialog, QLabel
+from PyQt5.QtWidgets import QFileDialog, QLabel, QWidget, QDialog
 from PyQt5.QtGui import QImage, QPixmap
 
 form_class = uic.loadUiType("./qtui.ui")[0]
+dialog_class=uic.loadUiType("./gap.ui")[0]
 
 #mouse location track class
 class MouseTracker(QtCore.QObject):
@@ -67,7 +68,8 @@ class WindowClass(QMainWindow, form_class):
             plot_wide_image,
             calculate,
             table_doubleclick_change,
-            table_delete_row
+            table_delete_row,
+            interval_set
         ):
         super().__init__()
         #function callback
@@ -95,6 +97,7 @@ class WindowClass(QMainWindow, form_class):
         self.calculate=calculate
         self.table_doubleclick_change=table_doubleclick_change
         self.table_delete_row=table_delete_row
+        self.interval_set=interval_set
 
         #UI initiation
         self.setupUi(self)
@@ -106,6 +109,7 @@ class WindowClass(QMainWindow, form_class):
         #menu bar triggering
         self.selectfolder.triggered.connect(self.select_folder_click)
         self.reset.triggered.connect(self.restart_all)
+        self.gap.triggered.connect(self.change_gap)
 
         #button background environment
         self.imageshow.setScaledContents(True)
@@ -166,8 +170,13 @@ class WindowClass(QMainWindow, form_class):
     def remove_row(self):
         row=self.masktable.currentRow()
         self.masktable.removeRow(row)
-
     
+    def change_gap(self):
+        d=GapDialog()
+        d.exec()
+        self.interval_set(d.gap)
+
+ 
     def resize_image(self):
         scale=self.get_scale()
         size = self.pixmap.size()
@@ -188,7 +197,7 @@ class WindowClass(QMainWindow, form_class):
         self.currentindex.append(str(index+1))  
     def set_slider_range(self):
         length=self.get_length()
-        self.slider.setRange(0, length)
+        self.slider.setRange(0, length-1)
     
 
     def canine_start(self):
@@ -245,3 +254,17 @@ class WindowClass(QMainWindow, form_class):
         self.resultcanine.append(str(w))
         self.resultcavity.append(str(b))
         self.resultratio.append(str(r))
+
+class GapDialog(QDialog,dialog_class):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.initUi()
+        self.gap=10
+
+    def initUi(self):
+        self.save.clicked.connect(self.save_interval)
+    
+    def save_interval(self):
+        self.gap = self.interval.value()
+        self.close()

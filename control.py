@@ -50,7 +50,8 @@ class Control:
             self.plot_wide_image,
             self.calculate,
             self.table_doubleclick_change,
-            self.table_delete_row
+            self.table_delete_row,
+            self.interval_set
         )
         self.init_variables()
         
@@ -70,6 +71,9 @@ class Control:
         self.model.init_data(folder)
         self.view.set_pixmap_image()
         self.view.set_slider_range()
+    
+    def interval_set(self, gap):
+        self.model.set_gap(gap)
     
 
     def get_scale(self):
@@ -249,7 +253,7 @@ class Control:
                         x.append(idx1)
                         y.append(idx2)
                         z.append(-self.model.get_gap()*e[0])
-        ax.scatter(x,y,z, marker='o', s=15, c='darkgreen', alpha=.25)
+        ax.scatter(x,y,z, marker='o', s=15, c='lightblue', alpha=.05)
         ax.axis('off')
         canvas.draw()
         width, height = fig.figbbox.width, fig.figbbox.height
@@ -269,7 +273,7 @@ class Control:
             e1=e[1]
             outside_result=self.calculate_layer(np.array(e1).tolist())
             inside_result=e1.shape[0]*e1.shape[1]-outside_result
-            all1s = np.count_nonzero(e==1)
+            all1s = np.count_nonzero(e1==1)
             white_space=e1.shape[0]*e1.shape[1]-all1s
             black_space=inside_result-white_space
             slicenum=e0
